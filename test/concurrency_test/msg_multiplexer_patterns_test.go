@@ -2,7 +2,7 @@ package concurrency_test
 
 import (
 	"fmt"
-	concurrency "go-channels/concurrency"
+	concurrency "gool/concurrency"
 
 	"time"
 
