@@ -1,4 +1,4 @@
-module goold
+module github.com/dcedyga/goold
 
 go 1.15
 
