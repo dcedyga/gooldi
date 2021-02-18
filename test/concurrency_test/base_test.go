@@ -2,7 +2,7 @@ package concurrency_test
 
 import (
 	"fmt"
-	concurrency "gool/concurrency"
+	concurrency "goold/concurrency"
 	"testing"
 
 	uuid "github.com/satori/go.uuid"

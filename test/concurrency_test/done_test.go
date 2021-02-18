@@ -2,7 +2,7 @@ package concurrency_test
 
 import (
 	"fmt"
-	concurrency "gool/concurrency"
+	concurrency "goold/concurrency"
 	"time"
 )
 

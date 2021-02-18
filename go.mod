@@ -1,4 +1,4 @@
-module gool
+module goold
 
 go 1.15
 
