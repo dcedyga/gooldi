@@ -37,7 +37,7 @@ type MsgMultiplexer struct {
 	stream                  chan (<-chan interface{})
 	lock                    *sync.RWMutex
 	sequence                interface{}
-	getKeyFn                func(interface{}) int64
+	getKeyFn                func(v interface{}) int64
 	getLastRegisteredKey    func() int64
 	getSequenceFn           func(v interface{}) interface{}
 	transformFn             func(mp *MsgMultiplexer, sm *SortedMap) interface{}
@@ -388,14 +388,14 @@ func (mp *MsgMultiplexer) cleanUpOutputMap(keysToDelete []int64) {
 
 // Iter iterates over the items in the Multiplexer
 // Each item is sent over a channel, so that
-// we can iterate over the map using the builtin range keyword
+// we can iterate over the it using the builtin range keyword
 func (mp *MsgMultiplexer) Iter() chan interface{} {
 	return Bridge(mp.doneHandler.Done(), mp.stream)
 }
 
 // bridgeIter iterates over the items of the preStream channel in the Multiplexer
 // Each item is sent over a channel, so that
-// we can iterate over the map using the builtin range keyword
+// we can iterate over it using the builtin range keyword
 func (mp *MsgMultiplexer) bridgeIter() <-chan interface{} {
 	return Bridge(mp.doneHandler.Done(), mp.preStream)
 }
