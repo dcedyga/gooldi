@@ -2,7 +2,8 @@ package concurrency_test
 
 import (
 	"fmt"
-	concurrency "goold/concurrency"
+
+	concurrency "github.com/dcedyga/goold/concurrency"
 
 	"time"
 
@@ -219,6 +220,8 @@ func (suite *Suite) Test04MsgMultiplexer02ProcessorsBM() {
 
 }
 
+var globalI int = 0
+
 func customGetLastRegisteredKey() int64 {
 	return time.Now().UnixNano()
 }
@@ -232,7 +235,8 @@ func customGetSequenceFn(v interface{}) interface{} {
 }
 
 func customTransformFn(mp *concurrency.MsgMultiplexer, sm *concurrency.SortedMap) interface{} {
-
+	globalI++
+	fmt.Printf("globalI:%v\n", globalI)
 	resultSlice := concurrency.NewSlice()
 	var msgType string
 	for item := range sm.Iter() {

@@ -2,8 +2,9 @@ package concurrency_test
 
 import (
 	"fmt"
-	concurrency "goold/concurrency"
 	"testing"
+
+	concurrency "github.com/dcedyga/goold/concurrency"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/suite"
