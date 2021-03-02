@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	concurrency "github.com/dcedyga/goold/concurrency"
+	concurrency "github.com/dcedyga/gooldi/concurrency"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/suite"

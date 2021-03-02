@@ -3,7 +3,7 @@ package concurrency_test
 import (
 	"fmt"
 
-	concurrency "github.com/dcedyga/goold/concurrency"
+	concurrency "github.com/dcedyga/gooldi/concurrency"
 
 	"time"
 
