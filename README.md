@@ -9,12 +9,13 @@
 
 ### Concurrency in Go
 ***
+```
 “Concurrency is about dealing with lots of things at once. It is a way to structure software, particularly as a way to write clean code that interacts well with the real world.” — Rob Pike
-
+```
 Concurrency refers to the design of the system, while parallelism relates to the execution. Concurrent programming is one of the most interesting aspects of the Go language. Go is designed with concurrency in mind and allows us to build complex concurrent pipelines. Go concurrency main building blocks are around parallel composition of sequential processes and communication between these processes. Go’s approach to concurrency can be best phrased by:
-
+```
 "Do not communicate by sharing memory; instead, share memory by communicating." 
-
+```
 #### Go Concurrency vs Multithreading
 
 In any other mainstream programming language, when concurrent threads need to share data in order to communicate, a lock is applied to the piece of memory. Instead of applying a lock on the shared variable, Go allows you to communicate (or send) the value stored in that variable from one thread to another. The default behavior is that both the thread sending the data and the one receiving the data will wait till the value reaches its destination. The “waiting” of the threads forces proper synchronization between threads when data is being exchanged.
