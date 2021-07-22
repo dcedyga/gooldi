@@ -1,36 +1,4 @@
-
-<div class="text-white bg-blue mb-2">
-  .text-white on .bg-blue
-</div>
-<div class="bg-blue-light mb-2">
-  .text-gray-dark on .bg-blue-light
-</div>
-<div class="text-white bg-red mb-2">
-  .text-white on .bg-red
-</div>
-<div class="text-red bg-red-light mb-2">
-  .text-red on .bg-red-light
-</div>
-<div class="bg-green-light mb-2">
-  .text-gray-dark on .bg-green-light
-</div>
-<div class="bg-yellow mb-2">
-  .text-gray-dark on .bg-yellow
-</div>
-<div class="bg-yellow-light mb-2">
-  .text-gray-dark on .bg-yellow-light
-</div>
-<div class="text-white bg-purple mb-2">
-  .text-white on .bg-purple
-</div>
-<div class="text-white bg-gray-dark mb-2">
-  .text-white on .bg-gray-dark
-</div>
-<div class="bg-gray">
-  .text-gray-dark on .bg-gray
-</div>
-
-# gooldi
+![header](https://capsule-render.vercel.app/api?type=waving&color=auto&height=300&section=header&text=gooldi&fontSize=90&animation=fadeIn&fontAlignY=25&desc=go%20concurrency%20library%20for%20deterministic%20and%20non-%20deterministic%20stream%20processing&descAlignY=51&descAlign=50)
 
 
 <font color="orange">gooldi</font> was born with the aim to use golang concurrency capabilities to provide a set of streaming patterns and approaches that allow to build very complex flows/ pipelines to fulfil the main paradigms for deterministic and no-deterministic stream processing.
