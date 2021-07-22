@@ -1,9 +1,11 @@
 
-# Color Test Document
+<style>
+H1{color:Blue !important;}
+H2{color:DarkOrange !important;}
+p{color:Black !important;}
+</style>
 
-<style>H1{color:Blue;}</style>
-<style>H2{color:DarkOrange;}</style>
-<style>p{color:Black;}</style>
+# Color Test Document
 
 ## Second Heading
 
