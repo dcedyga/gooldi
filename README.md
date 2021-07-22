@@ -25,7 +25,7 @@ In any other mainstream programming language, when concurrent threads need to sh
 Some facts:
  * goroutines are managed by go runtime and has no hardware dependencies while OS threads are managed by kernal and has hardware dependencies
  * goroutines are smaller: typically 2KB of stack size, threads 1-2MB
- * Stack size of go is managed in run-time and can grow up to 1GB which is possible by allocating and freeing heap storage while for threads stack size needs to be determined at compile time
+ * Stack size of go is managed in run-time and can grow up to 1GB which is possible by allocating and freeing heap storage while for threads, stack size needs to be determined at compile time
  * goroutine use channels to communicate with other goroutines with low latency. There is no easy communication medium between threads and huge latency between inter-thread communication
  * goroutine do not have any identity while threads do (TID)
  * goroutines are created and destoryed by the go's runtime. These operations are very cheap compared to threads as go runtime already maintain pool of threads for goroutines. In this case OS is not aware of goroutines
@@ -38,7 +38,7 @@ Some facts:
 * [Achieving concurrency in Go by Uday Hiwarale](https://medium.com/rungo/achieving-concurrency-in-go-3f84cbf870ca)
 * [Go's work-stealing scheduler](https://rakyll.org/scheduler/)
 
-## Concurrency patterns
+## gooldi: Concurrency patterns
 Important concurrency patterns to highlight are:
 
 - <span style="color:orange;">Bridge</span> - is a way to present a single-channel facade over a channel of channels. It is used to consume values from a sequence of channels (channel of channels) doing an ordered write from different sources. By bridging the channels it destructures the channel of channels into a simple channel, allowing to multiplex the input and simplify the consumption.With this pattern we can use the channel of channels from within a single range statement and focus on our loop’s logic.
@@ -64,7 +64,7 @@ Important concurrency patterns to highlight are:
 - <span style="color:orange;">RepeatChanParamFn</span> - Generator that repeats a function with a channel as parameter indefinitely.
 - <span style="color:orange;">RepeatChanParamsFn</span> - Generator that repeats a function with a list of channels as parameters indefinitely.
 
-## Thread-safe Maps and Slices
+## gooldi: Thread-safe Maps and Slices
 Slice and Map - cannot be used safely from multiple goroutines without the risk of having a race condition.
 
 <span style="color:orange;">gooldi´s</span> provides and implementation of Slice and Map types which can be safely shared between multiple goroutines by protecting the access to the shared data by a mutex. 
