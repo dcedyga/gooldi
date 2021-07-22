@@ -1,7 +1,7 @@
 ![header](https://capsule-render.vercel.app/api?type=waving&color=gradient&height=300&section=header&text=gooldi&fontSize=90&animation=fadeIn&fontAlignY=25&desc=go%20concurrency%20library%20for%20deterministic%20and%20non-%20deterministic%20stream%20processing&descAlignY=51&descAlign=50)
 
 
-<img align="center" src="https://img.shields.io/badge/gooldi-orange.svg?&style=flat-square&logoColor=" width="50" height="23"/> was born with the aim to use golang concurrency capabilities to provide a set of streaming patterns and approaches that allow to build very complex flows/ pipelines to fulfil the main paradigms for deterministic and no-deterministic stream processing.
+<img align="center" src="https://capsule-render.vercel.app/api?type=rounded&color=auto&height=300&section=header&text=gooldi&fontSize=190&animation=fadeIn&fontAlignY=55" width="50" height="23"/> was born with the aim to use golang concurrency capabilities to provide a set of streaming patterns and approaches that allow to build very complex flows/ pipelines to fulfil the main paradigms for deterministic and no-deterministic stream processing.
 
 <img align="center" src="https://img.shields.io/badge/gooldi-orange.svg?&style=flat-square&logoColor=" width="50" height="23"/> brings an implementation of most of the concurrency patterns define in ["Concurrency in Go"](https://katherine.cox-buday.com/concurrency-in-go/) by Cox-Buday. And a set of generators and utilities to ease working with these concurrency patterns.
 
