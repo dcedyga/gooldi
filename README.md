@@ -1,4 +1,14 @@
 
+# Color Test Document
+
+<style>H1{color:Blue;}</style>
+<style>H2{color:DarkOrange;}</style>
+<style>p{color:Black;}</style>
+
+## Second Heading
+
+This is a test to see how the colors work.
+
 # gooldi
 
 
@@ -8,7 +18,7 @@
 
 <span style="color:orange;">gooldi</span>  provides a thread-safe implementation of Map, Slice, SortedMap and SortedSlice to access to the relevant maps and slice types shared across goroutines without race conditions.
 
-#### Concurrency in Go
+### Concurrency in Go
 “Concurrency is about dealing with lots of things at once. It is a way to structure software, particularly as a way to write clean code that interacts well with the real world.” — Rob Pike
 
 Concurrency refers to the design of the system, while parallelism relates to the execution. Concurrent programming is one of the most interesting aspects of the Go language. Go is designed with concurrency in mind and allows us to build complex concurrent pipelines. Go concurrency main building blocks are around parallel composition of sequential processes and communication between these processes. Go’s approach to concurrency can be best phrased by:
