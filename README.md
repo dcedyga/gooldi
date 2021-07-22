@@ -7,7 +7,7 @@
 
 <span style="color:orange;">gooldi</span>  provides a thread-safe implementation of Map, Slice, SortedMap and SortedSlice to access to the relevant maps and slice types shared across goroutines without race conditions.
 
-### Concurrency in Go
+## Concurrency in Go
 ***
 ```
 “Concurrency is about dealing with lots of things at once. It is a way to structure software, 
@@ -19,7 +19,7 @@ Concurrency refers to the design of the system, while parallelism relates to the
 ```
 "Do not communicate by sharing memory; instead, share memory by communicating." 
 ```
-#### Go Concurrency vs Multithreading
+### Go Concurrency vs Multithreading
 
 In any other mainstream programming language, when concurrent threads need to share data in order to communicate, a lock is applied to the piece of memory. Instead of applying a lock on the shared variable, Go allows you to communicate (or send) the value stored in that variable from one thread to another. The default behavior is that both the thread sending the data and the one receiving the data will wait till the value reaches its destination. The “waiting” of the threads forces proper synchronization between threads when data is being exchanged.
 
@@ -32,14 +32,14 @@ Some facts:
  * goroutines are created and destoryed by the go's runtime. These operations are very cheap compared to threads as go runtime already maintain pool of threads for goroutines. In this case OS is not aware of goroutines
  * goroutines are coopertively scheduled,  when a goroutine switch occurs, only 3 registers need to be saved or restored. Threads are preemptively scheduled, switching cost between threads is high as scheduler needs to save/restore more than 50 registers and states. This can be quite significant when there is rapid switching between threads.
 
-#### Interesting Reads and References
+### Interesting Reads and References
 
 * [Concurrency is not Parallelism by Rob Pike](https://www.youtube.com/watch?v=oV9rvDllKEg)
 * [Concurrency in Go by Thejas Babu](https://medium.com/@thejasbabu/concurrency-in-go-e4a61ec96491)
 * [Achieving concurrency in Go by Uday Hiwarale](https://medium.com/rungo/achieving-concurrency-in-go-3f84cbf870ca)
 * [Go's work-stealing scheduler](https://rakyll.org/scheduler/)
 
-### Concurrency patterns
+## Concurrency patterns
 ***
 Important concurrency patterns to highlight are:
 
@@ -50,14 +50,14 @@ Important concurrency patterns to highlight are:
 - <span style="color:orange;">Or</span> - returns the value of the fastest channel.
 - <span style="color:orange;">Route</span> - Representation of the tee pattern. Takes a single input channel and an arbitrary number of output channels and duplicates each input into every output. When the input channel is closed, all outputs channels are closed. It allows to route or split an input into multiple outputs.
 
-#### Utilities
+### Utilities
 
 - <span style="color:orange;">AsChan</span> - sends the contents of a slice through a channel
 - <span style="color:orange;">CloseChannel</span> - Checks if the channel is not closed and closes it
 - <span style="color:orange;">Take</span> - Takes a defined number of values by num from a channel
 - <span style="color:orange;">ToString</span> - Converts any type of channel into a string channel
 
-#### Generators
+### Generators
 
 - <span style="color:orange;">Repeat</span> - Generator that repeats the values defined on the values slice indefinitely.
 - <span style="color:orange;">RepeatFn</span> - Generator that repeats a function indefinitely.
@@ -66,7 +66,7 @@ Important concurrency patterns to highlight are:
 - <span style="color:orange;">RepeatChanParamFn</span> - Generator that repeats a function with a channel as parameter indefinitely.
 - <span style="color:orange;">RepeatChanParamsFn</span> - Generator that repeats a function with a list of channels as parameters indefinitely.
 
-### Thread-safe Maps and Slices
+## Thread-safe Maps and Slices
 ***
 Slice and Map - cannot be used safely from multiple goroutines without the risk of having a race condition.
 
