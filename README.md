@@ -1,8 +1,8 @@
 ![header](https://capsule-render.vercel.app/api?type=waving&color=gradient&height=300&section=header&text=gooldi&fontSize=90&animation=fadeIn&fontAlignY=25&desc=go%20concurrency%20library%20for%20deterministic%20and%20non-%20deterministic%20stream%20processing&descAlignY=51&descAlign=50)
 
-==highlight==
+[normal link](https://www.google.com/)
 
-<mark>highlight</mark>
+<a href="https://www.google.com/" style="color: red; text-decoration: underline;text-decoration-style: dotted;">custom link</a>
 
 <font color="orange">gooldi</font> was born with the aim to use golang concurrency capabilities to provide a set of streaming patterns and approaches that allow to build very complex flows/ pipelines to fulfil the main paradigms for deterministic and no-deterministic stream processing.
 
