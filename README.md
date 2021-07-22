@@ -3,9 +3,9 @@
 
 <img align="left" src="https://img.shields.io/badge/gooldi-orange.svg?&style=flat-square&logoColor=" width="80" height="45"/> was born with the aim to use golang concurrency capabilities to provide a set of streaming patterns and approaches that allow to build very complex flows/ pipelines to fulfil the main paradigms for deterministic and no-deterministic stream processing.
 
-<img src="https://img.shields.io/badge/gooldi-orange.svg?&style=flat-square&logoColor=" width="60"/> brings an implementation of most of the concurrency patterns define in ["Concurrency in Go"](https://katherine.cox-buday.com/concurrency-in-go/) by Cox-Buday. And a set of generators and utilities to ease working with these concurrency patterns.
+<img align="left" src="https://img.shields.io/badge/gooldi-orange.svg?&style=flat-square&logoColor=" width="80" height="45"/> brings an implementation of most of the concurrency patterns define in ["Concurrency in Go"](https://katherine.cox-buday.com/concurrency-in-go/) by Cox-Buday. And a set of generators and utilities to ease working with these concurrency patterns.
 
-<img src="https://img.shields.io/badge/gooldi-orange.svg?&style=flat-square&logoColor=" width="60"/>  provides a thread-safe implementation of Map, Slice, SortedMap and SortedSlice to access to the relevant maps and slice types shared across goroutines without race conditions.
+<img align="left" src="https://img.shields.io/badge/gooldi-orange.svg?&style=flat-square&logoColor=" width="80" height="45"/> provides a thread-safe implementation of Map, Slice, SortedMap and SortedSlice to access to the relevant maps and slice types shared across goroutines without race conditions.
 
 ## Concurrency in Go
 ```
