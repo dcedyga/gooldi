@@ -1,14 +1,13 @@
 ![header](https://capsule-render.vercel.app/api?type=waving&color=gradient&height=300&section=header&text=gooldi&fontSize=90&animation=fadeIn&fontAlignY=25&desc=go%20concurrency%20library%20for%20deterministic%20and%20non-%20deterministic%20stream%20processing&descAlignY=51&descAlign=50)
 
 
-<font color="orange">gooldi</font> was born with the aim to use golang concurrency capabilities to provide a set of streaming patterns and approaches that allow to build very complex flows/ pipelines to fulfil the main paradigms for deterministic and no-deterministic stream processing.
+<span style="color:orange;">gooldi</span> was born with the aim to use golang concurrency capabilities to provide a set of streaming patterns and approaches that allow to build very complex flows/ pipelines to fulfil the main paradigms for deterministic and no-deterministic stream processing.
 
 <span style="color:orange;">gooldi</span> brings an implementation of most of the concurrency patterns define in ["Concurrency in Go"](https://katherine.cox-buday.com/concurrency-in-go/) by Cox-Buday. And a set of generators and utilities to ease working with these concurrency patterns.
 
 <span style="color:orange;">gooldi</span>  provides a thread-safe implementation of Map, Slice, SortedMap and SortedSlice to access to the relevant maps and slice types shared across goroutines without race conditions.
 
 ## Concurrency in Go
-***
 ```
 “Concurrency is about dealing with lots of things at once. It is a way to structure software, 
 particularly as a way to write clean code that interacts well with the real world.” 
@@ -40,7 +39,6 @@ Some facts:
 * [Go's work-stealing scheduler](https://rakyll.org/scheduler/)
 
 ## Concurrency patterns
-***
 Important concurrency patterns to highlight are:
 
 - <span style="color:orange;">Bridge</span> - is a way to present a single-channel facade over a channel of channels. It is used to consume values from a sequence of channels (channel of channels) doing an ordered write from different sources. By bridging the channels it destructures the channel of channels into a simple channel, allowing to multiplex the input and simplify the consumption.With this pattern we can use the channel of channels from within a single range statement and focus on our loop’s logic.
@@ -67,7 +65,6 @@ Important concurrency patterns to highlight are:
 - <span style="color:orange;">RepeatChanParamsFn</span> - Generator that repeats a function with a list of channels as parameters indefinitely.
 
 ## Thread-safe Maps and Slices
-***
 Slice and Map - cannot be used safely from multiple goroutines without the risk of having a race condition.
 
 <span style="color:orange;">gooldi´s</span> provides and implementation of Slice and Map types which can be safely shared between multiple goroutines by protecting the access to the shared data by a mutex. 
