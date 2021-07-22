@@ -10,6 +10,7 @@ import (
 type SortedSlice struct {
 	lock  *sync.RWMutex
 	items sortedSliceArray
+	dirty bool
 }
 
 type sortedSliceArray []interface{}
@@ -35,6 +36,7 @@ func NewSortedSlice() *SortedSlice {
 	cs := &SortedSlice{
 		items: make([]interface{}, 0),
 		lock:  &sync.RWMutex{},
+		dirty: true,
 	}
 
 	return cs
@@ -44,10 +46,18 @@ func NewSortedSlice() *SortedSlice {
 func (cs *SortedSlice) Append(item interface{}) {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
-
 	cs.items = append(cs.items, item)
-	sort.Sort(sortedSliceArray(cs.items))
+	cs.dirty = true
 
+}
+
+func (cs *SortedSlice) sort() {
+	cs.lock.Lock()
+	defer cs.lock.Unlock()
+	if cs.dirty {
+		sort.Sort(sortedSliceArray(cs.items))
+		cs.dirty = false
+	}
 }
 
 //RemoveItemAtIndex removes the item at the specified index
@@ -55,10 +65,12 @@ func (cs *SortedSlice) RemoveItemAtIndex(index int) {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
 	cs.items = append(cs.items[:index], cs.items[index+1:]...)
+	cs.dirty = true
 }
 
 //IndexOf returns the index of a specific item
 func (cs *SortedSlice) IndexOf(item interface{}) int {
+	cs.sort()
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
 	for index, v := range cs.items {
@@ -71,6 +83,7 @@ func (cs *SortedSlice) IndexOf(item interface{}) int {
 
 //GetItemAtIndex - Get item at index
 func (cs *SortedSlice) GetItemAtIndex(index int) interface{} {
+	cs.sort()
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
 	return cs.items[index]
@@ -83,6 +96,7 @@ func (cs *SortedSlice) Iter() <-chan SortedSliceItem {
 	c := make(chan SortedSliceItem)
 
 	f := func() {
+		cs.sort()
 		cs.lock.Lock()
 		defer cs.lock.Unlock()
 		for index, value := range cs.items {
@@ -103,6 +117,7 @@ func (cs *SortedSlice) IterWithCancel(cancel chan interface{}) <-chan SortedSlic
 	c := make(chan SortedSliceItem)
 
 	f := func() {
+		cs.sort()
 		cs.lock.Lock()
 		defer cs.lock.Unlock()
 		for index, value := range cs.items {

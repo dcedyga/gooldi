@@ -6,12 +6,10 @@ import (
 	concurrency "github.com/dcedyga/gooldi/concurrency"
 
 	"time"
-
-	uuid "github.com/satori/go.uuid"
 )
 
-func (suite *Suite) Test05MultiMsgMultiplexer01WaitForAll() {
-	dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(1 * time.Millisecond))
+func (suite *Suite) Test06MultiMsgMultiplexer01WaitForAll() {
+	dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(3 * time.Millisecond))
 	defer dm.GetDoneFunc()()
 	dh := dm.AddNewDoneHandler(0)
 	dh1 := dm.AddNewDoneHandler(1)
@@ -21,19 +19,19 @@ func (suite *Suite) Test05MultiMsgMultiplexer01WaitForAll() {
 	//Create caster
 	b1 := concurrency.NewBCaster(dh,
 		"bcaster1",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 	b2 := concurrency.NewBCaster(dh1,
 		"bcaster2",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 	b3 := concurrency.NewBCaster(dh2,
 		"bcaster3",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 
 	//Create Multiplexer
-	mp := concurrency.NewMultiMsgMultiplexer(dh3, "MultiMsg", concurrency.MultiMsgMultiplexerWaitForAll(true), concurrency.MultiMsgMultiplexerSequence(1))
+	mp := concurrency.NewMultiMsgMultiplexer(dh3, "MultiMsg", concurrency.MultiMsgMultiplexerWaitForAll(true), concurrency.MultiMsgMultiplexerIndex(1))
 
 	mp.Start()
 	//Create Processors
@@ -49,16 +47,16 @@ func (suite *Suite) Test05MultiMsgMultiplexer01WaitForAll() {
 		i := 0
 		for v := range mp.Iter() {
 			_ = v
-			item := v.(*concurrency.Event)
-			fmt.Printf("Multiplexer-key:%v\n", item.OutMessage.ID)
+			item := v.(*concurrency.Message)
+			fmt.Printf("Multiplexer-key:%v\n", item.ID)
 
-			m := item.OutMessage.Message.(*concurrency.SortedMap)
+			m := item.Message.(*concurrency.SortedMap)
 			//fmt.Printf("m:%v\n", m)
 			for it := range m.Iter() {
 				mapit := it.Value.(*concurrency.SortedMap)
 				for mit := range mapit.Iter() {
-					e := mit.Value.(*concurrency.Event)
-					fmt.Printf("bcaster-key:%v - msgkey:%v - e.InitMessage:%v - e.OutMessage:%v\n", it.Key, mit.Key, e.InitMessage.Message, e.OutMessage.Message)
+					e := mit.Value.(*concurrency.Message)
+					fmt.Printf("bcaster-key:%v - msgkey:%v - e.OutMessage:%v\n", it.Key, mit.Key, e.Message)
 				}
 
 			}
@@ -74,9 +72,10 @@ func (suite *Suite) Test05MultiMsgMultiplexer01WaitForAll() {
 	//wd, _ := mp.Get(1)
 	go func() {
 		for msgId := 0; msgId < 30; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b1", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b1.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b1", msgId),
+				b1.MsgType,
+			)
 			b1.Broadcast(e)
 			time.Sleep(500 * time.Microsecond)
 		}
@@ -84,9 +83,10 @@ func (suite *Suite) Test05MultiMsgMultiplexer01WaitForAll() {
 	}()
 	go func() {
 		for msgId := 0; msgId < 30; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b2", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b2.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b2", msgId),
+				b2.MsgType,
+			)
 			b2.Broadcast(e)
 			time.Sleep(1 * time.Millisecond)
 		}
@@ -94,9 +94,10 @@ func (suite *Suite) Test05MultiMsgMultiplexer01WaitForAll() {
 	}()
 	go func() {
 		for msgId := 0; msgId < 30; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b3", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b3.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b3", msgId),
+				b3.MsgType,
+			)
 			b3.Broadcast(e)
 			time.Sleep(500 * time.Microsecond)
 		}
@@ -106,7 +107,7 @@ func (suite *Suite) Test05MultiMsgMultiplexer01WaitForAll() {
 
 }
 
-func (suite *Suite) Test05MultiMsgMultiplexer02WaitForAllBuffer() {
+func (suite *Suite) Test06MultiMsgMultiplexer02WaitForAllBuffer() {
 	dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(1 * time.Millisecond))
 	defer dm.GetDoneFunc()()
 	dh := dm.AddNewDoneHandler(0)
@@ -117,19 +118,19 @@ func (suite *Suite) Test05MultiMsgMultiplexer02WaitForAllBuffer() {
 	//Create caster
 	b1 := concurrency.NewBCaster(dh,
 		"bcaster1",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 	b2 := concurrency.NewBCaster(dh1,
 		"bcaster2",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 	b3 := concurrency.NewBCaster(dh2,
 		"bcaster3",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 
 	//Create Multiplexer
-	mp := concurrency.NewMultiMsgMultiplexer(dh3, "MultiMsg", concurrency.MultiMsgMultiplexerBufferSize(2), concurrency.MultiMsgMultiplexerSequence(1))
+	mp := concurrency.NewMultiMsgMultiplexer(dh3, "MultiMsg", concurrency.MultiMsgMultiplexerBufferSize(2), concurrency.MultiMsgMultiplexerIndex(1))
 
 	mp.Start()
 	//Create Processors
@@ -145,17 +146,17 @@ func (suite *Suite) Test05MultiMsgMultiplexer02WaitForAllBuffer() {
 		i := 0
 		for v := range mp.Iter() {
 			_ = v
-			item := v.(*concurrency.Event)
-			fmt.Printf("Multiplexer-key:%v\n", item.OutMessage.ID)
+			item := v.(*concurrency.Message)
+			fmt.Printf("Multiplexer-key:%v\n", item.ID)
 
-			m := item.OutMessage.Message.(*concurrency.SortedMap)
+			m := item.Message.(*concurrency.SortedMap)
 			//fmt.Printf("m:%v\n", m)
 			for it := range m.Iter() {
 				mapit := it.Value.(*concurrency.SortedMap)
 				fmt.Printf("bcaster-key:%v\n", it.Key)
 				for mit := range mapit.Iter() {
-					e := mit.Value.(*concurrency.Event)
-					fmt.Printf("msgkey:%v - e.InitMessage:%v - e.OutMessage:%v\n", mit.Key, e.InitMessage.Message, e.OutMessage.Message)
+					e := mit.Value.(*concurrency.Message)
+					fmt.Printf("msgkey:%v - e.OutMessage:%v\n", mit.Key, e.Message)
 				}
 
 			}
@@ -171,9 +172,10 @@ func (suite *Suite) Test05MultiMsgMultiplexer02WaitForAllBuffer() {
 	//wd, _ := mp.Get(1)
 	go func() {
 		for msgId := 0; msgId < 30; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b1", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b1.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b1", msgId),
+				b1.MsgType,
+			)
 			b1.Broadcast(e)
 			time.Sleep(500 * time.Microsecond)
 		}
@@ -181,9 +183,10 @@ func (suite *Suite) Test05MultiMsgMultiplexer02WaitForAllBuffer() {
 	}()
 	go func() {
 		for msgId := 0; msgId < 30; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b2", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b2.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b2", msgId),
+				b2.MsgType,
+			)
 			b2.Broadcast(e)
 			time.Sleep(1 * time.Millisecond)
 		}
@@ -191,18 +194,20 @@ func (suite *Suite) Test05MultiMsgMultiplexer02WaitForAllBuffer() {
 	}()
 	go func() {
 		for msgId := 0; msgId < 30; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b3", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b3.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b3", msgId),
+				b3.MsgType,
+			)
 			b3.Broadcast(e)
 			time.Sleep(500 * time.Microsecond)
 		}
 
 	}()
+
 	time.Sleep(1000 * time.Millisecond)
 
 }
-func (suite *Suite) Test05MultiMsgMultiplexer03WaitForAllBM() {
+func (suite *Suite) Test06MultiMsgMultiplexer03WaitForAllBM() {
 	dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(1 * time.Millisecond))
 	defer dm.GetDoneFunc()()
 	dh := dm.AddNewDoneHandler(0)
@@ -213,19 +218,19 @@ func (suite *Suite) Test05MultiMsgMultiplexer03WaitForAllBM() {
 	//Create caster
 	b1 := concurrency.NewBCaster(dh,
 		"bcaster1",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 	b2 := concurrency.NewBCaster(dh1,
 		"bcaster2",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 	b3 := concurrency.NewBCaster(dh2,
 		"bcaster3",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 
 	//Create Multiplexer
-	mp := concurrency.NewMultiMsgMultiplexer(dh3, "MultiMsg", concurrency.MultiMsgMultiplexerWaitForAll(true), concurrency.MultiMsgMultiplexerSequence(1))
+	mp := concurrency.NewMultiMsgMultiplexer(dh3, "MultiMsg", concurrency.MultiMsgMultiplexerWaitForAll(true), concurrency.MultiMsgMultiplexerIndex(1))
 
 	mp.Start()
 	//Create Processors
@@ -253,9 +258,10 @@ func (suite *Suite) Test05MultiMsgMultiplexer03WaitForAllBM() {
 	//wd, _ := mp.Get(1)
 	go func() {
 		for msgId := 0; msgId < 300000; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b1", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b1.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b1", msgId),
+				b1.MsgType,
+			)
 			b1.Broadcast(e)
 
 		}
@@ -263,9 +269,10 @@ func (suite *Suite) Test05MultiMsgMultiplexer03WaitForAllBM() {
 	}()
 	go func() {
 		for msgId := 0; msgId < 300000; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b2", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b2.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b2", msgId),
+				b2.MsgType,
+			)
 			b2.Broadcast(e)
 
 		}
@@ -273,19 +280,21 @@ func (suite *Suite) Test05MultiMsgMultiplexer03WaitForAllBM() {
 	}()
 	go func() {
 		for msgId := 0; msgId < 300000; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b3", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b3.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b3", msgId),
+				b3.MsgType,
+			)
 			b3.Broadcast(e)
 
 		}
 
 	}()
+
 	time.Sleep(1000 * time.Millisecond)
 
 }
 
-func (suite *Suite) Test05MultiMsgMultiplexer04WaitForAllWithTimer() {
+func (suite *Suite) Test06MultiMsgMultiplexer04WaitForAllWithTimer() {
 	dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(1 * time.Millisecond))
 	defer dm.GetDoneFunc()()
 	dh := dm.AddNewDoneHandler(0)
@@ -296,15 +305,15 @@ func (suite *Suite) Test05MultiMsgMultiplexer04WaitForAllWithTimer() {
 	//Create caster
 	b1 := concurrency.NewBCaster(dh,
 		"bcaster1",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 	b2 := concurrency.NewBCaster(dh1,
 		"bcaster2",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 	b3 := concurrency.NewBCaster(dh2,
 		"bcaster3",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 
 	d := 200 * time.Millisecond
@@ -312,7 +321,7 @@ func (suite *Suite) Test05MultiMsgMultiplexer04WaitForAllWithTimer() {
 	mp := concurrency.NewMultiMsgMultiplexer(dh3,
 		"MultiMsg",
 		concurrency.MultiMsgMultiplexerWaitForAll(true),
-		concurrency.MultiMsgMultiplexerSequence(1),
+		concurrency.MultiMsgMultiplexerIndex(1),
 		concurrency.MultiMsgMultiplexerSendPeriod(&d),
 	)
 
@@ -330,16 +339,16 @@ func (suite *Suite) Test05MultiMsgMultiplexer04WaitForAllWithTimer() {
 		i := 0
 		for v := range mp.Iter() {
 			_ = v
-			item := v.(*concurrency.Event)
-			fmt.Printf("Multiplexer-key:%v\n", item.OutMessage.ID)
+			item := v.(*concurrency.Message)
+			fmt.Printf("Multiplexer-key:%v\n", item.ID)
 
-			m := item.OutMessage.Message.(*concurrency.SortedMap)
+			m := item.Message.(*concurrency.SortedMap)
 			//fmt.Printf("m:%v\n", m)
 			for it := range m.Iter() {
 				mapit := it.Value.(*concurrency.SortedMap)
 				for mit := range mapit.Iter() {
-					e := mit.Value.(*concurrency.Event)
-					fmt.Printf("bcaster-key:%v - msgkey:%v - e.InitMessage:%v - e.OutMessage:%v\n", it.Key, mit.Key, e.InitMessage.Message, e.OutMessage.Message)
+					e := mit.Value.(*concurrency.Message)
+					fmt.Printf("bcaster-key:%v - msgkey:%v - e.OutMessage:%v\n", it.Key, mit.Key, e.Message)
 				}
 
 			}
@@ -355,9 +364,10 @@ func (suite *Suite) Test05MultiMsgMultiplexer04WaitForAllWithTimer() {
 	//wd, _ := mp.Get(1)
 	go func() {
 		for msgId := 0; msgId < 300; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b1", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b1.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b1", msgId),
+				b1.MsgType,
+			)
 			b1.Broadcast(e)
 			time.Sleep(500 * time.Microsecond)
 		}
@@ -365,9 +375,10 @@ func (suite *Suite) Test05MultiMsgMultiplexer04WaitForAllWithTimer() {
 	}()
 	go func() {
 		for msgId := 0; msgId < 300; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b2", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b2.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b2", msgId),
+				b2.MsgType,
+			)
 			b2.Broadcast(e)
 			time.Sleep(1 * time.Millisecond)
 		}
@@ -375,9 +386,10 @@ func (suite *Suite) Test05MultiMsgMultiplexer04WaitForAllWithTimer() {
 	}()
 	go func() {
 		for msgId := 0; msgId < 300; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b3", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b3.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b3", msgId),
+				b3.MsgType,
+			)
 			b3.Broadcast(e)
 			time.Sleep(500 * time.Microsecond)
 		}
@@ -387,7 +399,7 @@ func (suite *Suite) Test05MultiMsgMultiplexer04WaitForAllWithTimer() {
 
 }
 
-func (suite *Suite) Test05MultiMsgMultiplexer05WaitForAllWithTimerBM() {
+func (suite *Suite) Test06MultiMsgMultiplexer05WaitForAllWithTimerBM() {
 	dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(1 * time.Millisecond))
 	defer dm.GetDoneFunc()()
 	dh := dm.AddNewDoneHandler(0)
@@ -398,15 +410,15 @@ func (suite *Suite) Test05MultiMsgMultiplexer05WaitForAllWithTimerBM() {
 	//Create caster
 	b1 := concurrency.NewBCaster(dh,
 		"bcaster1",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 	b2 := concurrency.NewBCaster(dh1,
 		"bcaster2",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 	b3 := concurrency.NewBCaster(dh2,
 		"bcaster3",
-		concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
+		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
 
 	d := 1 * time.Microsecond
@@ -414,7 +426,7 @@ func (suite *Suite) Test05MultiMsgMultiplexer05WaitForAllWithTimerBM() {
 	mp := concurrency.NewMultiMsgMultiplexer(dh3,
 		"MultiMsg",
 		concurrency.MultiMsgMultiplexerWaitForAll(true),
-		concurrency.MultiMsgMultiplexerSequence(1),
+		concurrency.MultiMsgMultiplexerIndex(1),
 		concurrency.MultiMsgMultiplexerSendPeriod(&d),
 	)
 
@@ -444,28 +456,34 @@ func (suite *Suite) Test05MultiMsgMultiplexer05WaitForAllWithTimerBM() {
 	//wd, _ := mp.Get(1)
 	go func() {
 		for msgId := 0; msgId < 300000; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b1", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b1.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b1", msgId),
+				b1.MsgType,
+			)
 			b1.Broadcast(e)
+
 		}
 
 	}()
 	go func() {
 		for msgId := 0; msgId < 300000; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b2", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b2.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b2", msgId),
+				b2.MsgType,
+			)
 			b2.Broadcast(e)
+
 		}
 
 	}()
 	go func() {
 		for msgId := 0; msgId < 300000; msgId++ {
-
-			e := &concurrency.Message{ID: uuid.NewV4().String(), Message: fmt.Sprintf("%v From b3", msgId), TimeInNano: time.Now().UnixNano(), MsgType: b3.MsgType}
-
+			e := concurrency.NewMessage(
+				fmt.Sprintf("%v From b3", msgId),
+				b3.MsgType,
+			)
 			b3.Broadcast(e)
+
 		}
 
 	}()

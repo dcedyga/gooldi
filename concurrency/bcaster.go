@@ -10,11 +10,11 @@ import (
 // BCasterOption - option to initialize the bcaster
 type BCasterOption func(*BCaster)
 
-// BCaster - Is a broadcaster that allows to send events of type concurrency.Event to registered listeners using
+// BCaster - Is a broadcaster that allows to send messages of different types to registered listeners using
 // go concurrency patterns. Listeners are chan interfaces{} allowing for go concurrent communication.
 // Closure of BCaster is handle by a concurrency.DoneHandler that allows to control they way a set of go routines
 // are closed in order to prevent deadlocks and unwanted behaviour
-// It detects when listeners are done and performs the required cleanup to ensure that events are sent to the
+// It detects when listeners are done and performs the required cleanup to ensure that messages are sent to the
 // active listeners.
 type BCaster struct {
 	id           string
@@ -28,14 +28,14 @@ type BCaster struct {
 }
 
 // NewBCaster - Constructor
-func NewBCaster(dh *DoneHandler, MsgType string, opts ...BCasterOption) *BCaster {
+func NewBCaster(dh *DoneHandler, msgType string, opts ...BCasterOption) *BCaster {
 	id := uuid.NewV4().String()
 	b := &BCaster{
 		id:           id,
 		doneHandler:  dh,
 		listeners:    NewSortedMap(),
 		closed:       false,
-		MsgType:      MsgType,
+		MsgType:      msgType,
 		listenerLock: &sync.RWMutex{},
 		lock:         &sync.RWMutex{},
 	}
@@ -61,7 +61,7 @@ func BCasterTransformFn(fn func(b *BCaster, input interface{}) interface{}) BCas
 }
 
 // AddListener - creates a listener as chan interface{} with a DoneHandler in order to manage its closure and pass it to the
-// requestor so it can be used in order to consume events from the Bcaster
+// requestor so it can be used in order to consume messages from the Bcaster
 func (b *BCaster) AddListener(dh *DoneHandler) chan interface{} {
 	b.listenerLock.Lock()
 	defer b.listenerLock.Unlock()
@@ -95,7 +95,12 @@ func (b *BCaster) RemoveListener(listenerCh chan interface{}) {
 	b.listenerLock.Unlock()
 }
 
-// Broadcast - Transforms a message into a concurrency.Event and broadcasts it to all the active registered listeners
+// Broadcast - Broadcast a message to all the active registered listeners. It uses
+// a transform function to map the input message to a desired output.
+// When using BCasterMessagePairTransformFn as the broadcaster transform function,
+// it transforms a message into a concurrency.MessagePair
+// and broadcasts it to all the active registered listeners. The default transform function
+// just returns the input message to be broadcasted.
 func (b *BCaster) Broadcast(msg interface{}) {
 
 	closed := b.getClosed()
@@ -110,7 +115,6 @@ func (b *BCaster) Broadcast(msg interface{}) {
 			if listener == nil {
 				toNextItem = true
 				fmt.Printf("Broadcast - nil listerner\n")
-
 			}
 		loop:
 			for !toNextItem {
@@ -182,37 +186,11 @@ func (b *BCaster) listenersToSlice() []interface{} {
 	return s
 }
 
-// createEventFromMsg - creates a concurrency.Event from a concurrency.Message
-// func (b *BCaster) createEventFromMsg(msg *Message) *Event {
-// 	b.lock.Lock()
-// 	s := *NewSlice()
-// 	e := &Event{
-// 		InitMessage:       msg,
-// 		InMessageSequence: s,
-// 		OutMessage:        msg,
-// 		Sequence:          0,
-// 	}
-// 	b.lock.Unlock()
-// 	return e
-// }
+/******************************************************************************
+Plug and Play and Transformation functions
+*******************************************************************************/
 
-// BCasterEventTransformFn - Gets the bcaster and input message the output in the form of an event
-func BCasterEventTransformFn(b *BCaster, input interface{}) interface{} {
-	var msg *Message
-	if input != nil {
-		msg = input.(*Message)
-	}
-	s := *NewSlice()
-	e := &Event{
-		InitMessage:       msg,
-		InMessageSequence: s,
-		OutMessage:        msg,
-		Sequence:          0,
-	}
-	return e
-}
-
-// defaultBCasterTransformFn - Gets the bcaster, input and result and outputs the input
+// defaultBCasterTransformFn - Gets the bcaster, input and outputs the input
 func defaultBCasterTransformFn(b *BCaster, input interface{}) interface{} {
 	return input
 }

@@ -145,9 +145,9 @@ func (suite *Suite) Test02Patterns06FanIn() {
 	for i := 0; i < concurrentThreads; i++ {
 		threads[i] = getTime(dh.Done())
 	}
-	for t := range concurrency.Take(dh.Done(), concurrency.FanIn(dh.Done(), threads...), 12*50) {
-		//fmt.Printf("\t%v\n", t)
-		_ = t
+	for t := range concurrency.Take(dh.Done(), concurrency.FanIn(dh.Done(), threads...), concurrentThreads) {
+		fmt.Printf("\t%v\n", t)
+		//_ = t
 	}
 	go func() {
 		for {
@@ -172,9 +172,9 @@ func (suite *Suite) Test02Patterns07FanInRec() {
 		threads[i] = getTime(dh.Done())
 	}
 
-	for t := range concurrency.Take(dh.Done(), concurrency.FanInRec(dh.Done(), threads...), 12*50) {
-		_ = t
-		//fmt.Printf("\t%v\n", t)
+	for t := range concurrency.Take(dh.Done(), concurrency.FanInRec(dh.Done(), threads...), concurrentThreads) {
+		//_ = t
+		fmt.Printf("\t%v\n", t)
 	}
 	go func() {
 		for {
@@ -240,7 +240,7 @@ func (suite *Suite) Test02Patterns10Bridge() {
 			defer close(chanStream)
 			for i := 0; i < 10; i++ {
 				stream := make(chan interface{}, 1)
-				stream <- i
+				stream <- i*i
 				close(stream)
 				chanStream <- stream
 			}

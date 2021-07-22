@@ -1,8 +1,5 @@
 package concurrency
 
-import (
-	"fmt"
-)
 
 // OrDone - Wraps a channel with a select statement that also selects from a done channel. Allows to cancel the channel
 // avoiding go-routine leaks
@@ -114,7 +111,6 @@ func OrDoneChanParamFn(done, c <-chan interface{}, fn func(param chan interface{
 		for {
 			select {
 			case <-done:
-				fmt.Printf("We are done with: %v\n", param)
 				fn(param)
 				return
 			case v, ok := <-c:

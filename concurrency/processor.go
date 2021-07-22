@@ -1,7 +1,6 @@
 package concurrency
 
 import (
-	"fmt"
 	"sync"
 
 	uuid "github.com/satori/go.uuid"
@@ -12,7 +11,7 @@ type ProcessorOption func(*Processor)
 
 // Processor - Unit that listen to an input channel (inputChan) and process work.
 // Closing the inputChan channel needs to be managed outside the Processor using a DoneHandler
-// It has a DoneHandler to manage the lifecycle of the processor, a sequence to determine the
+// It has a DoneHandler to manage the lifecycle of the processor, an index to determine the
 // order in which the processor output results might be stored in a multiplexed pattern, an id
 // of the processor, the name of the processor, the state of the processor and an output channel
 // that emits the processed results for consumption.
@@ -20,7 +19,7 @@ type Processor struct {
 	Name          string
 	doneHandler   *DoneHandler
 	inputChan     chan interface{}
-	sequence      interface{}
+	index         int64
 	id            string
 	outputChannel chan interface{}
 	lock          *sync.RWMutex
@@ -37,7 +36,7 @@ func NewProcessor(name string, dh *DoneHandler, opts ...ProcessorOption) *Proces
 		Name:          name,
 		inputChan:     nil,
 		outputChannel: make(chan interface{}),
-		sequence:      0,
+		index:         0,
 		state:         Init,
 		lock:          &sync.RWMutex{},
 	}
@@ -65,10 +64,10 @@ func ProcessorTransformFn(fn func(pr *Processor, input interface{}, result inter
 	}
 }
 
-// ProcessorWithSequence - option to add a sequence value to the processor
-func ProcessorWithSequence(seq interface{}) ProcessorOption {
+// ProcessorWithIndex - option to add a index value to the processor to define its order of execution
+func ProcessorWithIndex(idx int64) ProcessorOption {
 	return func(p *Processor) {
-		p.sequence = seq
+		p.index = idx
 	}
 }
 
@@ -85,8 +84,8 @@ func (p *Processor) ID() string {
 }
 
 // Sequence - retrieves the Sequence of the Processor
-func (p *Processor) Sequence() interface{} {
-	return p.sequence
+func (p *Processor) Index() int64 {
+	return p.index
 }
 
 // InputChannel - retrieves the InputChannel of the Processor
@@ -102,13 +101,13 @@ func (p *Processor) OutputChannel() chan interface{} {
 // Process - When the processor is in Processing state processes a defined function. When the Processor is
 // in stop state the processor will still consume messages from the input channel but it will produce a nil
 // output as no process will be involved.
-func (p *Processor) Process(f func(input interface{}, params ...interface{}) interface{}, params ...interface{}) {
+func (p *Processor) Process(f func(pr *Processor, input interface{}, params ...interface{}) interface{}, params ...interface{}) {
 	p.setState(Processing)
 	drain := false
 	for input := range p.inputChan {
 		var result interface{}
 		if p.GetState() == Processing {
-			result = f(input, params...)
+			result = f(p, input, params...)
 		}
 		r := p.transformFn(p, input, result)
 		nextItem := false
@@ -171,39 +170,46 @@ func (p *Processor) HasValidInputChan() bool {
 
 //close - Closes the processor
 func (p *Processor) close() {
-	fmt.Printf("Processor %v: Closing\n", p.Name)
+	//fmt.Printf("Processor %v: Closing\n", p.Name)
 	p.lock.Lock()
 	p.inputChan = nil
 	p.lock.Unlock()
 
 }
 
-// ProcessorEventTransformFn - Gets the processor, input event and result message and returns the processed
-// output in the form of an event
-func ProcessorEventTransformFn(p *Processor, input interface{}, result interface{}) interface{} {
-	var event *Event
-	var resultMsg *Message
-	if input != nil {
-		event = input.(*Event)
-	}
-	if result != nil {
-		resultMsg = result.(*Message)
-	}
-	s := event.InMessageSequence
-	if event.OutMessage != nil {
-		s.Append(event.OutMessage)
-	}
+/******************************************************************************
+Plug and Play and Transformation functions
+*******************************************************************************/
 
-	r := &Event{
-		InitMessage:       event.InitMessage,
-		InMessageSequence: s,
-		OutMessage:        resultMsg,
-		Sequence:          p.sequence,
+// ProcessorMessagePairTransformFn - Gets the processor, input Message and output message and returns the processed
+// output in the form of an MessagePair
+func ProcessorMessagePairTransformFn(p *Processor, input interface{}, output interface{}) interface{} {
+
+	if IsMessagePtr(input) && IsMessagePtr(output) {
+		return NewMessagePair(input.(*Message),
+			output.(*Message),
+			MessagePairWithIndex(p.index),
+			MessagePairWithCorrelationKey(input.(*Message).CorrelationKey),
+		)
 	}
-	return r
+	out := NewMessage(nil, input.(*Message).MsgType, MessageWithIndex(p.index), MessageWithCorrelationKey(input.(*Message).CorrelationKey))
+	return &MessagePair{
+		In:             input.(*Message),
+		Out:            out,
+		CorrelationKey: input.(*Message).CorrelationKey,
+	}
 }
 
 // defaultProcessorTransformFn - Gets the processor, input and result and outputs the result
-func defaultProcessorTransformFn(p *Processor, input interface{}, result interface{}) interface{} {
-	return result
+func defaultProcessorTransformFn(p *Processor, input interface{}, output interface{}) interface{} {
+	if output != nil {
+		output.(*Message).Index = p.index
+		return output
+	}
+	return NewMessage(nil,
+		input.(*Message).MsgType,
+		MessageWithIndex(p.index),
+		MessageWithCorrelationKey(input.(*Message).CorrelationKey),
+	)
+
 }

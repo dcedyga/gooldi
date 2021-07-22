@@ -29,17 +29,17 @@ func NewMap() *Map {
 
 // Set adds an item to a concurrent map
 func (cm *Map) Set(key, value interface{}) {
+
 	cm.lock.Lock()
 	defer cm.lock.Unlock()
-
 	cm.items[key] = value
 
 }
 
 // Get retrieves the value for a concurrent map item
 func (cm *Map) Get(key interface{}) (interface{}, bool) {
-	cm.lock.Lock()
-	defer cm.lock.Unlock()
+	cm.lock.RLock()
+	defer cm.lock.RUnlock()
 
 	value, ok := cm.items[key]
 
@@ -48,8 +48,8 @@ func (cm *Map) Get(key interface{}) (interface{}, bool) {
 
 // GetKeyByItem - retrieves the key for a concurrent map item by item
 func (cm *Map) GetKeyByItem(item interface{}) (interface{}, bool) {
-	cm.lock.Lock()
-	defer cm.lock.Unlock()
+	cm.lock.RLock()
+	defer cm.lock.RUnlock()
 	for k, v := range cm.items {
 		if item == v {
 			return k, true
@@ -60,12 +60,15 @@ func (cm *Map) GetKeyByItem(item interface{}) (interface{}, bool) {
 }
 
 // Delete removes the value/key pair of a concurrent map item
-func (cm *Map) Delete(key interface{}) {
+func (cm *Map) Delete(key interface{}) bool {
+
 	cm.lock.Lock()
 	defer cm.lock.Unlock()
-	if _, ok := cm.items[key]; ok {
+	_, ok := cm.items[key]
+	if ok {
 		delete(cm.items, key)
 	}
+	return ok
 
 }
 
@@ -121,3 +124,27 @@ func (cm *Map) Len() int {
 	defer cm.lock.RUnlock()
 	return len(cm.items)
 }
+
+// GetKeys returns a slice of all the keys present
+func (cm *Map) GetKeys() []interface{} {
+	cm.lock.RLock()
+	defer cm.lock.RUnlock()
+	keys := []interface{}{}
+	for i := range cm.items {
+		keys = append(keys, i)
+	}
+	return keys
+}
+
+// func (cm *Map) SortAndClone() *Map {
+// 	cm.lock.Lock()
+// 	defer cm.lock.Unlock()
+// 	m := NewMap()
+// 	sk := make([]interface{}, len(cm.keys))
+// 	copy(sk, cm.keys)
+// 	sort.Sort(interfaceArray(sk))
+// 	for _, k := range sk {
+// 		m.Set(k, cm.items[k])
+// 	}
+// 	return m
+// }

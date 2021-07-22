@@ -1,9 +1,5 @@
 package concurrency
 
-import (
-	"fmt"
-)
-
 // Bridge is a way to present a single-channel facade over a channel of channels. It is used
 // to consume values from a sequence of channels (channel of channels) doing an ordered write
 // from different sources. By bridging the channels it destructures the channel of channels
@@ -18,9 +14,7 @@ func Bridge(done <-chan interface{}, chanStream <-chan <-chan interface{}) chan 
 			var stream <-chan interface{}
 			select {
 			case maybeStream, ok := <-chanStream:
-
 				if ok == false {
-					fmt.Printf("maybeStream - ok:%v\n", ok)
 					return
 				}
 				stream = maybeStream

@@ -6,20 +6,6 @@ import (
 	"sync"
 )
 
-// SortedMap is a sorted map type that can be safely shared between
-// goroutines that require read/write access to a map
-type SortedMap struct {
-	items map[interface{}]interface{}
-	keys  interfaceArray
-	lock  *sync.RWMutex
-}
-
-// SortedMapItem contains a key/value pair item of a concurrent map
-type SortedMapItem struct {
-	Key   interface{}
-	Value interface{}
-}
-
 type interfaceArray []interface{}
 
 func (a interfaceArray) Len() int      { return len(a) }
@@ -31,79 +17,70 @@ func (a interfaceArray) Less(i, j int) bool {
 
 }
 
-// NewSortedMap creates a new concurrent sorted map
+// Map is a map type that can be safely shared between
+// goroutines that require read/write access to a map
+type SortedMap struct {
+	lock  *sync.RWMutex
+	keys  []interface{}
+	dirty bool
+	items map[interface{}]interface{}
+}
+
+// MapItem contains a key/value pair item of a concurrent map
+type SortedMapItem struct {
+	Key   interface{}
+	Value interface{}
+}
+
+// NewMap creates a new concurrent map
 func NewSortedMap() *SortedMap {
-	return &SortedMap{
+	cm := &SortedMap{
 		items: make(map[interface{}]interface{}),
 		keys:  []interface{}{},
+		dirty: true,
 		lock:  &sync.RWMutex{},
 	}
+
+	return cm
 }
 
 // Set adds an item to a concurrent map
-func (sm *SortedMap) Set(key, value interface{}) {
-	if index := sm.indexOf(key); index == -1 {
-		sm.lock.Lock()
-		defer sm.lock.Unlock()
-		sm.items[key] = value
-		sm.keys = append(sm.keys, key)
-		sort.Sort(interfaceArray(sm.keys))
-	}
+func (cm *SortedMap) Set(key, value interface{}) {
 
+	cm.lock.Lock()
+	defer cm.lock.Unlock()
+	cm.items[key] = value
+	cm.dirty = true
 }
 
 // Get retrieves the value for a concurrent map item
-func (sm *SortedMap) Get(key interface{}) (interface{}, bool) {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
+func (cm *SortedMap) Get(key interface{}) (interface{}, bool) {
+	cm.lock.RLock()
+	defer cm.lock.RUnlock()
 
-	value, ok := sm.items[key]
+	value, ok := cm.items[key]
 
 	return value, ok
 }
 
-// GetMapItemByIndex retrieves the SortedMapItem for a concurrent map item given the index
-func (sm *SortedMap) GetMapItemByIndex(index int) (*SortedMapItem, bool) {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-	if index < len(sm.keys) {
-		key := sm.keys[index]
-		value, ok := sm.items[key]
-		i := &SortedMapItem{Key: key, Value: value}
-		return i, ok
+// GetItemByIndex retrieves the value for a concurrent map item
+func (cm *SortedMap) GetSortedMapItemByIndex(index int) (*MapItem, bool) {
+	cm.sort()
+	cm.lock.RLock()
+	defer cm.lock.RUnlock()
+	key := cm.keys[index]
+	if value, ok := cm.items[key]; ok {
+		return &MapItem{key, value}, ok
 	}
+
 	return nil, false
 }
 
-// GetByIndex retrieves the value for a concurrent map item given the index
-func (sm *SortedMap) GetByIndex(index int) (interface{}, bool) {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-	if index < len(sm.keys) {
-		key := sm.keys[index]
-		value, ok := sm.items[key]
-
-		return value, ok
-	}
-	return nil, false
-}
-
-// GetKeyByIndex retrieves the key for a concurrent map item given the index
-func (sm *SortedMap) GetKeyByIndex(index int) (interface{}, bool) {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-	if index < len(sm.keys) {
-		key := sm.keys[index]
-		return key, true
-	}
-	return nil, false
-}
-
-// GetKeyByItem retrieves the key for a concurrent map item
-func (sm *SortedMap) GetKeyByItem(item interface{}) (interface{}, bool) {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-	for k, v := range sm.items {
+// GetKeyByItem - retrieves the key for a concurrent map item by item
+func (cm *SortedMap) GetKeyByItem(item interface{}) (interface{}, bool) {
+	cm.lock.RLock()
+	defer cm.lock.RUnlock()
+	for k, v := range cm.items {
 		if item == v {
 			return k, true
 		}
@@ -112,42 +89,32 @@ func (sm *SortedMap) GetKeyByItem(item interface{}) (interface{}, bool) {
 	return nil, false
 }
 
-func (sm *SortedMap) indexOf(item interface{}) int {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-	for k, v := range sm.keys {
-		if item == v {
-			return k
-		}
-	}
-	return -1 //not found.
-}
+// Delete removes the value/key pair of a concurrent map item
+func (cm *SortedMap) Delete(key interface{}) bool {
 
-// Delete removes the value/key pair of a concurrent sorted map item
-func (sm *SortedMap) Delete(key interface{}) {
-
-	if index := sm.indexOf(key); index > -1 {
-		sm.lock.Lock()
-		delete(sm.items, key)
-		sm.keys = append(sm.keys[:index], sm.keys[index+1:]...)
-		sm.lock.Unlock()
+	cm.lock.Lock()
+	defer cm.lock.Unlock()
+	_, ok := cm.items[key]
+	if ok {
+		delete(cm.items, key)
+		cm.dirty = true
 	}
+	return ok
 
 }
 
 // Iter iterates over the items in a concurrent map
 // Each item is sent over a channel, so that
 // we can iterate over the map using the builtin range keyword
-func (sm *SortedMap) Iter() <-chan SortedMapItem {
-	c := make(chan SortedMapItem)
+func (cm *SortedMap) Iter() <-chan MapItem {
+	c := make(chan MapItem)
 
 	f := func() {
-		sm.lock.Lock()
-		defer sm.lock.Unlock()
-
-		for _, k := range sm.keys {
-			v := sm.items[k]
-			c <- SortedMapItem{k, v}
+		cm.sort()
+		cm.lock.Lock()
+		defer cm.lock.Unlock()
+		for _, k := range cm.keys {
+			c <- MapItem{k, cm.items[k]}
 		}
 		close(c)
 	}
@@ -160,18 +127,19 @@ func (sm *SortedMap) Iter() <-chan SortedMapItem {
 // Each item is sent over a channel, so that
 // we can iterate over the map using the builtin range keyword
 // allows to pass a cancel chan to make the iteration cancelable
-func (sm *SortedMap) IterWithCancel(cancel chan interface{}) <-chan SortedMapItem {
-	c := make(chan SortedMapItem)
+func (cm *SortedMap) IterWithCancel(cancel chan interface{}) <-chan MapItem {
+	c := make(chan MapItem)
+
 	f := func() {
-		sm.lock.Lock()
-		defer sm.lock.Unlock()
-		for _, k := range sm.keys {
-			v := sm.items[k]
+		cm.sort()
+		cm.lock.Lock()
+		defer cm.lock.Unlock()
+		for _, k := range cm.keys {
 			select {
 			case <-cancel:
 				close(c)
 				return
-			case c <- SortedMapItem{k, v}:
+			case c <- MapItem{k, cm.items[k]}:
 			}
 		}
 		close(c)
@@ -180,10 +148,43 @@ func (sm *SortedMap) IterWithCancel(cancel chan interface{}) <-chan SortedMapIte
 
 	return c
 }
-
-//Len - length of the sortedmap
-func (sm *SortedMap) Len() int {
-	sm.lock.RLock()
-	defer sm.lock.RUnlock()
-	return len(sm.items)
+func (cm *SortedMap) sort() {
+	cm.lock.Lock()
+	defer cm.lock.Unlock()
+	if cm.dirty {
+		cm.keys = make([]interface{}, 0, len(cm.items))
+		for i := range cm.items {
+			cm.keys = append(cm.keys, i)
+		}
+		sort.Sort(interfaceArray(cm.keys))
+		cm.dirty = false
+	}
 }
+
+//Len - length of the map
+func (cm *SortedMap) Len() int {
+	cm.lock.RLock()
+	defer cm.lock.RUnlock()
+	return len(cm.items)
+}
+
+// GetKeys returns a slice of all the keys present
+func (cm *SortedMap) GetKeys() []interface{} {
+	cm.sort()
+	cm.lock.RLock()
+	defer cm.lock.RUnlock()
+	return cm.keys
+}
+
+// func (cm *Map) SortAndClone() *Map {
+// 	cm.lock.Lock()
+// 	defer cm.lock.Unlock()
+// 	m := NewMap()
+// 	sk := make([]interface{}, len(cm.keys))
+// 	copy(sk, cm.keys)
+// 	sort.Sort(interfaceArray(sk))
+// 	for _, k := range sk {
+// 		m.Set(k, cm.items[k])
+// 	}
+// 	return m
+// }

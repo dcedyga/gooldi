@@ -2,11 +2,12 @@ package concurrency_test
 
 import (
 	"fmt"
-	concurrency "github.com/dcedyga/gooldi/concurrency"
 	"time"
+
+	concurrency "github.com/dcedyga/gooldi/concurrency"
 )
 
-func (suite *Suite) Test06Collections01SortedMapIterWithCancel() {
+func (suite *Suite) Test07Collections01SortedMapIterWithCancel() {
 
 	m := concurrency.NewSortedMap()
 	cancel := make(chan interface{})
@@ -24,7 +25,7 @@ func (suite *Suite) Test06Collections01SortedMapIterWithCancel() {
 	time.Sleep(1000 * time.Millisecond)
 }
 
-func (suite *Suite) Test06Collections02SortedMapIterWithCancelNoExit() {
+func (suite *Suite) Test07Collections02SortedMapIterWithCancelNoExit() {
 
 	m := concurrency.NewSortedMap()
 	cancel := make(chan interface{})
@@ -38,7 +39,7 @@ func (suite *Suite) Test06Collections02SortedMapIterWithCancelNoExit() {
 	time.Sleep(1000 * time.Millisecond)
 }
 
-func (suite *Suite) Test06Collections03SortedMapIterWithCancelExitDeleteAndReplay() {
+func (suite *Suite) Test07Collections03SortedMapIterWithCancelExitDeleteAndReplay() {
 
 	m := concurrency.NewSortedMap()
 	cancel := make(chan interface{})
@@ -61,12 +62,24 @@ func (suite *Suite) Test06Collections03SortedMapIterWithCancelExitDeleteAndRepla
 	time.Sleep(1000 * time.Millisecond)
 }
 
-func (suite *Suite) Test06Collections04MapIterWithCancel() {
+func (suite *Suite) Test07Collections04SortedMapGetItemAtIndex() {
+
+	m := concurrency.NewSortedMap()
+	for i := 0; i < 10; i++ {
+		m.Set(i, i)
+	}
+	if item, ok := m.GetSortedMapItemByIndex(5); ok {
+		fmt.Printf("key:%v,item:%v\n", item.Key, item.Value)
+	}
+
+}
+
+func (suite *Suite) Test07Collections05MapIterWithCancel() {
 
 	m := concurrency.NewMap()
 	cancel := make(chan interface{})
 	for i := 0; i < 10; i++ {
-		m.Set(i, i)
+		go m.Set(i, i)
 	}
 	for item := range m.IterWithCancel(cancel) {
 		fmt.Printf("%v:%v\n", item.Key, item.Value)
@@ -79,7 +92,7 @@ func (suite *Suite) Test06Collections04MapIterWithCancel() {
 	time.Sleep(1000 * time.Millisecond)
 }
 
-func (suite *Suite) Test06Collections05MapIterWithCancelNoExit() {
+func (suite *Suite) Test07Collections06MapIterWithCancelNoExit() {
 
 	m := concurrency.NewMap()
 	cancel := make(chan interface{})
@@ -93,7 +106,7 @@ func (suite *Suite) Test06Collections05MapIterWithCancelNoExit() {
 	time.Sleep(1000 * time.Millisecond)
 }
 
-func (suite *Suite) Test06Collections06MapIterWithCancelExitDeleteAndReplay() {
+func (suite *Suite) Test07Collections07MapIterWithCancelExitDeleteAndReplay() {
 
 	m := concurrency.NewMap()
 	cancel := make(chan interface{})
@@ -115,7 +128,7 @@ func (suite *Suite) Test06Collections06MapIterWithCancelExitDeleteAndReplay() {
 	}
 	time.Sleep(1000 * time.Millisecond)
 }
-func (suite *Suite) Test06Collections07SliceIterWithCancel() {
+func (suite *Suite) Test07Collections08SliceIterWithCancel() {
 
 	s := concurrency.NewSlice()
 	cancel := make(chan interface{})
@@ -140,7 +153,7 @@ func (suite *Suite) Test06Collections07SliceIterWithCancel() {
 	time.Sleep(1000 * time.Millisecond)
 }
 
-func (suite *Suite) Test06Collections08SliceIterWithCancelNoExit() {
+func (suite *Suite) Test07Collections09SliceIterWithCancelNoExit() {
 
 	s := concurrency.NewSlice()
 	cancel := make(chan interface{})
@@ -161,7 +174,7 @@ func (suite *Suite) Test06Collections08SliceIterWithCancelNoExit() {
 	time.Sleep(1000 * time.Millisecond)
 }
 
-func (suite *Suite) Test06Collections09SliceIterWithCancelExitDeleteAndReplay() {
+func (suite *Suite) Test07Collections10SliceIterWithCancelExitDeleteAndReplay() {
 
 	s := concurrency.NewSlice()
 	cancel := make(chan interface{})
@@ -190,7 +203,7 @@ func (suite *Suite) Test06Collections09SliceIterWithCancelExitDeleteAndReplay() 
 	}
 	time.Sleep(1000 * time.Millisecond)
 }
-func (suite *Suite) Test06Collections10SortedSliceIterWithCancel() {
+func (suite *Suite) Test07Collections11SortedSliceIterWithCancel() {
 
 	s := concurrency.NewSortedSlice()
 	cancel := make(chan interface{})
@@ -215,7 +228,7 @@ func (suite *Suite) Test06Collections10SortedSliceIterWithCancel() {
 	time.Sleep(1000 * time.Millisecond)
 }
 
-func (suite *Suite) Test06Collections11SortedSliceIterWithCancelNoExit() {
+func (suite *Suite) Test07Collections12SortedSliceIterWithCancelNoExit() {
 
 	s := concurrency.NewSortedSlice()
 	cancel := make(chan interface{})
@@ -236,7 +249,7 @@ func (suite *Suite) Test06Collections11SortedSliceIterWithCancelNoExit() {
 	time.Sleep(1000 * time.Millisecond)
 }
 
-func (suite *Suite) Test06Collections12SortedSliceIterWithCancelExitDeleteAndReplay() {
+func (suite *Suite) Test07Collections13SortedSliceIterWithCancelExitDeleteAndReplay() {
 
 	s := concurrency.NewSortedSlice()
 	cancel := make(chan interface{})

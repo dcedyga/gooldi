@@ -12,11 +12,11 @@ import (
 type MultiMsgMultiplexerOption func(*MultiMsgMultiplexer)
 
 // MultiMsgMultiplexer - The default implementation MultiMsgMultiplexer allows to create complex patterns where multiple Broadcasters
-// can emit an event to multiple processors (consumers) that can potentially represent multiple processing systems,
+// can emit a Message to multiple processors (consumers) that can potentially represent multiple processing systems,
 // do the relevant calculation and multiplex the multiple outputs into a single channel for simplified consumption.
 // Its main function is to Mulitplex a set of multiple messages that can be parallel processed and  converge the set of
-// initial concurrency.Event/ Message into a SortedMap ordered by messageType that can be sent on one channel.
-// values of the processors grouped by initial concurrency.Event/Message and ordered by sequence value of each processor.
+// initial concurrency.Message into a SortedMap ordered by messageType that can be sent on one channel.
+// values of the processors grouped by initial concurrency.Message and ordered by index value of each processor.
 // Closure of MultiMsgMultiplexer is handle by a concurrency.DoneHandler that allows to control they way a set of go routines
 // are closed in order to prevent deadlocks and unwanted behaviour
 // MultiMsgMultiplexer outputs the multiplexed result in one channel using the channel bridge pattern.
@@ -38,7 +38,7 @@ type MultiMsgMultiplexer struct {
 	preStream     chan (<-chan interface{})
 	stream        chan (<-chan interface{})
 	lock          *sync.RWMutex
-	sequence      interface{}
+	index         int64
 	waitForAll    bool
 	BufferSize    int
 	MsgType       string
@@ -63,7 +63,7 @@ func NewMultiMsgMultiplexer(dh *DoneHandler, msgType string, opts ...MultiMsgMul
 		outputMap:     NewSortedMap(),
 		preStream:     make(chan (<-chan interface{})),
 		stream:        make(chan (<-chan interface{})),
-		sequence:      0,
+		index:         0,
 		waitForAll:    false,
 		BufferSize:    1,
 		MsgType:       msgType,
@@ -87,10 +87,10 @@ func (mp *MultiMsgMultiplexer) doneRn() {
 	}
 }
 
-// MultiMsgMultiplexerSequence - option to add a sequence value to the MultiMsgMultiplexer
-func MultiMsgMultiplexerSequence(seq interface{}) MultiMsgMultiplexerOption {
+// MultiMsgMultiplexerIndex - option to add a Index value to the MultiMsgMultiplexer
+func MultiMsgMultiplexerIndex(idx int64) MultiMsgMultiplexerOption {
 	return func(mp *MultiMsgMultiplexer) {
-		mp.sequence = seq
+		mp.index = idx
 	}
 }
 
@@ -136,9 +136,9 @@ func (mp *MultiMsgMultiplexer) ID() string {
 	return mp.id
 }
 
-// Sequence - retrieves the Sequence of the MultiMsgMultiplexer
-func (mp *MultiMsgMultiplexer) Sequence() interface{} {
-	return mp.sequence
+// Index - retrieves the index of the MultiMsgMultiplexer
+func (mp *MultiMsgMultiplexer) Index() interface{} {
+	return mp.index
 }
 
 // Set - Registers a channel in the MultiMsgMultiplexer and starts processing it
@@ -222,10 +222,10 @@ func (mp *MultiMsgMultiplexer) AddItemToMap(v interface{}, m *SortedMap) {
 	//Check length
 	if m.Len() == mp.BufferSize {
 		//delete first Item
-		keyToDelete, okd := m.GetKeyByIndex(0)
-		if okd {
-			m.Delete(keyToDelete)
-		}
+		// keyToDelete, okd := m.GetKeyByIndex(0)
+		// if okd {
+		// 	m.Delete(keyToDelete)
+		// }
 	}
 	//Add new item
 	mp.lock.Lock()
@@ -259,11 +259,11 @@ func (mp *MultiMsgMultiplexer) mainProcess() {
 				continue loop
 			default:
 				key := v.(*MultiMsgResultItem).key
-				event := v.(*MultiMsgResultItem).value.(*Event)
+				item := v.(*MultiMsgResultItem).value
 				rm, ok := mp.outputMap.Get(key)
 				if ok {
 					m := rm.(*SortedMap)
-					mp.AddItemToMap(event, m)
+					mp.AddItemToMap(item, m)
 					//If waitForAll - we just wait till all the maps have at least one entry
 					if mp.waitForAll && !mp.allReady() {
 						nextItem = true
@@ -302,52 +302,6 @@ func (mp *MultiMsgMultiplexer) close() {
 
 }
 
-// defaultItemKey - gets the last registered key when a new channel is added or removed. It
-// is used in conjunction with the defaultItemKey to extract the length of the output SortedMap.
-// Can be overridden for a more generic implementation that is not Event Oriented
-func (mp *MultiMsgMultiplexer) defaultItemKey(v interface{}) int64 {
-	return v.(*Event).InitMessage.TimeInNano
-}
-
-// defaultMultiMsgTransformFn - Transforms the SortedMap output into an Event for future consumption as part of the
-// output channel of the MultiMsgMultiplexer. Can be overridden for a more generic implementation that is not Event
-// Oriented
-func defaultMultiMsgTransformFn(mp *MultiMsgMultiplexer, r *SortedMap) interface{} {
-	mp.lock.Lock()
-	defer mp.lock.Unlock()
-	m := NewSortedMap()
-	for item := range r.Iter() {
-		it := NewSortedMap()
-		for i := range item.Value.(*SortedMap).Iter() {
-			it.Set(i.Key, i.Value)
-		}
-		m.Set(item.Key, it)
-	}
-	//Init message
-	initmsg := &Message{
-		ID:         uuid.NewV4().String(),
-		Message:    "MultiMsgMultiplexer message",
-		TimeInNano: time.Now().UnixNano(),
-		MsgType:    mp.MsgType,
-	}
-	//TODO - InMessagesequenceMessage
-
-	rmsg := &Message{
-		ID:         uuid.NewV4().String(),
-		Message:    m,
-		TimeInNano: initmsg.TimeInNano,
-		MsgType:    initmsg.MsgType,
-	}
-
-	re := &Event{
-		InitMessage:       initmsg,
-		InMessageSequence: Slice{},
-		OutMessage:        rmsg,
-		Sequence:          mp.sequence,
-	}
-	return re
-}
-
 // Iter iterates over the items in the MultiMsgMultiplexer
 // Each item is sent over a channel, so that
 // we can iterate over the it using the builtin range keyword
@@ -360,4 +314,37 @@ func (mp *MultiMsgMultiplexer) Iter() chan interface{} {
 // we can iterate over it using the builtin range keyword
 func (mp *MultiMsgMultiplexer) bridgeIter() <-chan interface{} {
 	return Bridge(mp.doneHandler.Done(), mp.preStream)
+}
+
+/******************************************************************************
+Plug and Play and Transformation functions
+*******************************************************************************/
+
+// defaultItemKey - gets the last registered key when a new channel is added or removed. It
+// is used in conjunction with the defaultItemKey to extract the length of the output SortedMap.
+// Can be overridden for a more generic implementation
+func (mp *MultiMsgMultiplexer) defaultItemKey(v interface{}) int64 {
+	return v.(*Message).CorrelationKey
+}
+
+// defaultMultiMsgTransformFn - Transforms the SortedMap output into a Message for future consumption as part of the
+// output channel of the MultiMsgMultiplexer. Can be overridden for a more generic implementation
+// Oriented
+func defaultMultiMsgTransformFn(mp *MultiMsgMultiplexer, r *SortedMap) interface{} {
+	mp.lock.Lock()
+	defer mp.lock.Unlock()
+	m := NewSortedMap()
+	for item := range r.Iter() {
+		it := NewSortedMap()
+		for i := range item.Value.(*SortedMap).Iter() {
+			it.Set(i.Key, i.Value)
+		}
+		m.Set(item.Key, it)
+	}
+	rmsg := NewMessage(m,
+		mp.MsgType,
+		MessageWithIndex(mp.index),
+	)
+
+	return rmsg
 }
