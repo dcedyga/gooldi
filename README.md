@@ -69,40 +69,40 @@ What a mutex does is basically to acquire a lock when it needs to access our con
 <a href="./concurrency/map.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=Map&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> and <a href="./concurrency/sorted-map.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=SortedMap&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> are `map` types within <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> that are safe to share among threads. 
 `SortedSlice` is an ordered implementation of the `Slice` type and `SortedMap` is an ordered implementation of the `Map` type. The performance among sorted vs non-sorted implementations of these types are very similar as `SortedSlice` and `SortedMap` have a `dirty` property that is set when there is a change on the `SortedSlice` or the `SortedMap`. The sort mechanism will only happen when attempting to read the relevant type and if the `dirty`property is set to `true`, keeping the `SortedSlice` and the `SortedMap` very performant. 
 
-    ```go
-    //Sample SortedSlice
-    s := concurrency.NewSortedSlice()
-    cancel := make(chan interface{})
-    s.Append("Juan")
-    s.Append("Pepi")
-    s.Append("David")
-    s.Append("Ayleen")
-    s.Append("Lila")
-    s.Append("Freddy")
-    s.Append("Moncho")
-    s.Append("Zac")
-    s.Append("Caty")
-    s.Append("Tom")
-    for item := range s.IterWithCancel(cancel) {
-        fmt.Printf("%v:%v\n", item.Index, item.Value)
-        if item.Index == 5 {
-            close(cancel)
-            break
-        }
+```go
+//Sample SortedSlice
+s := concurrency.NewSortedSlice()
+cancel := make(chan interface{})
+s.Append("Juan")
+s.Append("Pepi")
+s.Append("David")
+s.Append("Ayleen")
+s.Append("Lila")
+s.Append("Freddy")
+s.Append("Moncho")
+s.Append("Zac")
+s.Append("Caty")
+s.Append("Tom")
+for item := range s.IterWithCancel(cancel) {
+    fmt.Printf("%v:%v\n", item.Index, item.Value)
+    if item.Index == 5 {
+        close(cancel)
+        break
     }
-    ```
+}
+```
   
-    ```go
-    //Sample SortedMap
-    m := concurrency.NewSortedMap()
-	cancel := make(chan interface{})
-	for i := 0; i < 10; i++ {
-		m.Set(i, i)
-	}
-	for item := range m.IterWithCancel(cancel) {
-		fmt.Printf("%v:%v\n", item.Key, item.Value)
-	}
-    ```
+```go
+//Sample SortedMap
+m := concurrency.NewSortedMap()
+cancel := make(chan interface{})
+for i := 0; i < 10; i++ {
+    m.Set(i, i)
+}
+for item := range m.IterWithCancel(cancel) {
+    fmt.Printf("%v:%v\n", item.Key, item.Value)
+}
+```
 ## gooldi: Handling channel cancellation
 
 <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> provides an ordered layered mechanism in order to handle cancellation of channels. While we explored the use of the go `context`package to use cancelable contexts, the way it deals with the cancellation is not fit for purpose for the processing mechanisms that are part of the <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> library. Cancellation within the `context` package happens in a non-deterministic way and it can lead to exceptions due to the closure of channels that are still active.
