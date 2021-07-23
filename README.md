@@ -100,7 +100,7 @@ What a mutex does is basically to acquire a lock when it needs to access our con
         }
     }
     ```
-`Map`and `SortedMap` can be safely shared between goroutines and the have their relevant constructors as `NewMap` and `NewSortedMap`. Both have the following methods:
+`Map`and `SortedMap` have their relevant constructors as `NewMap` and `NewSortedMap`. Both have the following methods:
   * **Set** adds an item to a concurrent map
   * **Get** retrieves the value for a concurrent map item
   * **GetItemByIndex** retrieves the value for a concurrent map item
