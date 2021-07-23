@@ -58,7 +58,8 @@ Important concurrency patterns to highlight are:
 
 ## gooldi: Thread-safe Maps and Slices
 ```
-Slice and Map - cannot be used safely from multiple goroutines without the risk of having a race condition.
+Slice and Map - cannot be used safely from multiple goroutines without the risk of having 
+a race condition.
 ```
 <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> provides and implementation of Slice and Map types which can be safely shared between multiple goroutines by protecting the access to the shared data by a mutex. 
 
