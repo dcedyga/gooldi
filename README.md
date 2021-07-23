@@ -57,12 +57,12 @@ Important concurrency patterns to highlight are:
 
 ### Generators
 
-- <a href="./concurrency/repeat.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=Repeat&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> Generator that repeats the values defined on the values slice indefinitely.
-- <a href="./concurrency/repeat.go#L21"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=RepeatFn&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a>  Generator that repeats a function indefinitely.
-- <span style="color:orange;">RepeatParamFn</span> - Generator that repeats a function with one parameter indefinitely.
-- <span style="color:orange;">RepeatParamsFn</span> - Generator that repeats a function with a list of parameters indefinitely.
-- <span style="color:orange;">RepeatChanParamFn</span> - Generator that repeats a function with a channel as parameter indefinitely.
-- <span style="color:orange;">RepeatChanParamsFn</span> - Generator that repeats a function with a list of channels as parameters indefinitely.
+- <a href="./concurrency/repeat.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=Repeat&fontSize=95&animation=fadeIn&fontAlignY=55" width="100" height="35"/></a> Generator that repeats the values defined on the values slice indefinitely.
+- <a href="./concurrency/repeat.go#L21"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=RepeatFn&fontSize=95&animation=fadeIn&fontAlignY=55" width="100" height="35"/></a>  Generator that repeats a function indefinitely.
+- <a href="./concurrency/repeat.go#L21"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=RepeatParamFn&fontSize=95&animation=fadeIn&fontAlignY=55" width="100" height="35"/></a> Generator that repeats a function with one parameter indefinitely.
+- <a href="./concurrency/repeat.go#L21"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=RepeatParamsFn&fontSize=95&animation=fadeIn&fontAlignY=55" width="100" height="35"/></a> Generator that repeats a function with a list of parameters indefinitely.
+- <a href="./concurrency/repeat.go#L21"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=RepeatChanParamFn&fontSize=70&animation=fadeIn&fontAlignY=55" width="100" height="50"/></a> Generator that repeats a function with a channel as parameter indefinitely.
+- <a href="./concurrency/repeat.go#L21"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=RepeatChanParamsFn&fontSize=70&animation=fadeIn&fontAlignY=55" width="100" height="50"/></a> Generator that repeats a function with a list of channels as parameters indefinitely.
 
 ## gooldi: Thread-safe Maps and Slices
 Slice and Map - cannot be used safely from multiple goroutines without the risk of having a race condition.
