@@ -66,8 +66,40 @@ a race condition.
 What a mutex does is basically to acquire a lock when it needs to access our concurrent type, When holding the lock a goroutine can read and/or write to the shared data protected by the mutex safely, this lock can be acquired by a single goroutine at a time, and if other goroutine needs access to the same shared data it waits until the lock has been released by the goroutine holding the lock. <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi's&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> implementation of these types manages the acquisition and release of locks avoiding deadlocks and unwanted behaviours.
 
 
+- <a href="./concurrency/route.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=Slice&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> and <a href="./concurrency/route.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=SortedSlice&fontSize=135&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> are the types within gooldi that are safe to share among threads. The only difference between them is that the SortedSlice is an ordered implementation of the Slice type. The performance among both is very similar as SortedSlice has a `dirty` property that is set when there is a change on the SortedSlice. The sort of the SortedSlice will only happen when attempting to read the SortedSlice and if the `dirty`property is set to `true`, keeping the SortedSlice very performant. 
+Both of them can be safely shared between goroutines and the have their relevant constructors `NewSlice` and `NewSortedSlice`. Both have the following methods:
+  * **Append** adds an item to the concurrent slice
+  * **RemoveItemAtIndex** removes the item at the specified index
+  * **IndexOf** returns the index of a specific item
+  * **GetItemAtIndex** - Get item at index
+  * **Iter** iterates over the items in the concurrent slice, Each item is sent over a channel, so that we can iterate over the slice using the builtin range keyword
+  * **IterWithCancel** same as Iter but allows to pass a cancel chan to make the iteration cancelable
+  * **Len** - length of the slice
+  * **Cap** - capacity of the slice
 
 
+```go
+    s := concurrency.NewSortedSlice()
+	cancel := make(chan interface{})
+	s.Append("Juan")
+	s.Append("Pepi")
+	s.Append("David")
+	s.Append("Ayleen")
+	s.Append("Lila")
+	s.Append("Freddy")
+	s.Append("Moncho")
+	s.Append("Zac")
+	s.Append("Caty")
+	s.Append("Tom")
+	for item := range s.IterWithCancel(cancel) {
+		fmt.Printf("%v:%v\n", item.Index, item.Value)
+		if item.Index == 5 {
+			close(cancel)
+			break
+		}
+	}
+
+```
 
 What it does
 
