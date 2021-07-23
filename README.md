@@ -79,29 +79,29 @@ Both of them can be safely shared between goroutines and the have their relevant
 
 
 
-```go
-//Sample SoredSlice
-s := concurrency.NewSortedSlice()
-cancel := make(chan interface{})
-s.Append("Juan")
-s.Append("Pepi")
-s.Append("David")
-s.Append("Ayleen")
-s.Append("Lila")
-s.Append("Freddy")
-s.Append("Moncho")
-s.Append("Zac")
-s.Append("Caty")
-s.Append("Tom")
-for item := range s.IterWithCancel(cancel) {
-    fmt.Printf("%v:%v\n", item.Index, item.Value)
-    if item.Index == 5 {
-        close(cancel)
-        break
+    ```go
+    //Sample SoredSlice
+    s := concurrency.NewSortedSlice()
+    cancel := make(chan interface{})
+    s.Append("Juan")
+    s.Append("Pepi")
+    s.Append("David")
+    s.Append("Ayleen")
+    s.Append("Lila")
+    s.Append("Freddy")
+    s.Append("Moncho")
+    s.Append("Zac")
+    s.Append("Caty")
+    s.Append("Tom")
+    for item := range s.IterWithCancel(cancel) {
+        fmt.Printf("%v:%v\n", item.Index, item.Value)
+        if item.Index == 5 {
+            close(cancel)
+            break
+        }
     }
-}
 
-```
+    ```
 
 What it does
 
