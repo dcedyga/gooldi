@@ -17,7 +17,7 @@ func (a interfaceArray) Less(i, j int) bool {
 
 }
 
-// Map is a map type that can be safely shared between
+// SortedMap is a map type that can be safely shared between
 // goroutines that require read/write access to a map
 type SortedMap struct {
 	lock  *sync.RWMutex
@@ -26,13 +26,13 @@ type SortedMap struct {
 	items map[interface{}]interface{}
 }
 
-// MapItem contains a key/value pair item of a concurrent map
+// SortedMapItem contains a key/value pair item of a concurrent map
 type SortedMapItem struct {
 	Key   interface{}
 	Value interface{}
 }
 
-// NewMap creates a new concurrent map
+// NewSortedMap creates a new concurrent map
 func NewSortedMap() *SortedMap {
 	cm := &SortedMap{
 		items: make(map[interface{}]interface{}),
@@ -175,16 +175,3 @@ func (cm *SortedMap) GetKeys() []interface{} {
 	defer cm.lock.RUnlock()
 	return cm.keys
 }
-
-// func (cm *Map) SortAndClone() *Map {
-// 	cm.lock.Lock()
-// 	defer cm.lock.Unlock()
-// 	m := NewMap()
-// 	sk := make([]interface{}, len(cm.keys))
-// 	copy(sk, cm.keys)
-// 	sort.Sort(interfaceArray(sk))
-// 	for _, k := range sk {
-// 		m.Set(k, cm.items[k])
-// 	}
-// 	return m
-// }

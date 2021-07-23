@@ -135,16 +135,3 @@ func (cm *Map) GetKeys() []interface{} {
 	}
 	return keys
 }
-
-// func (cm *Map) SortAndClone() *Map {
-// 	cm.lock.Lock()
-// 	defer cm.lock.Unlock()
-// 	m := NewMap()
-// 	sk := make([]interface{}, len(cm.keys))
-// 	copy(sk, cm.keys)
-// 	sort.Sort(interfaceArray(sk))
-// 	for _, k := range sk {
-// 		m.Set(k, cm.items[k])
-// 	}
-// 	return m
-// }
