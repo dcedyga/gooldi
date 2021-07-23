@@ -65,18 +65,9 @@ a race condition.
 
 What a mutex does is basically to acquire a lock when it needs to access our concurrent type, When holding the lock a goroutine can read and/or write to the shared data protected by the mutex safely, this lock can be acquired by a single goroutine at a time, and if other goroutine needs access to the same shared data it waits until the lock has been released by the goroutine holding the lock. <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi's&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> implementation of these types manages the acquisition and release of locks avoiding deadlocks and unwanted behaviours.
 
-<a href="./concurrency/slice.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=Slice&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> and <a href="./concurrency/sorted-slice.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=SortedSlice&fontSize=135&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> are `slice` types and 
-<a href="./concurrency/map.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=Map&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> and <a href="./concurrency/sorted-map.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=SortedMap&fontSize=135&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> are `map` types within <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> that are safe to share among threads. 
+<a href="./concurrency/slice.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=Slice&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> and <a href="./concurrency/sorted-slice.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=SortedSlice&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> are `slice` types and 
+<a href="./concurrency/map.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=300&section=header&text=Map&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> and <a href="./concurrency/sorted-map.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=SortedMap&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> are `map` types within <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> that are safe to share among threads. 
 `SortedSlice` is an ordered implementation of the `Slice` type and `SortedMap` is an ordered implementation of the `Map` type. The performance among sorted vs non-sorted implementations of these types are very similar as `SortedSlice` and `SortedMap` have a `dirty` property that is set when there is a change on the `SortedSlice` or the `SortedMap`. The sort mechanism will only happen when attempting to read the relevant type and if the `dirty`property is set to `true`, keeping the `SortedSlice` and the `SortedMap` very performant. 
-* `Slice`and `SortedSlice` have their relevant constructors as `NewSlice` and `NewSortedSlice`. Both have the following methods:
-  * **Append** adds an item to the concurrent slice
-  * **RemoveItemAtIndex** removes the item at the specified index
-  * **IndexOf** returns the index of a specific item
-  * **GetItemAtIndex** - Get item at index
-  * **Iter** iterates over the items in the concurrent slice, Each item is sent over a channel, so that we can iterate over the slice using the builtin range keyword
-  * **IterWithCancel** same as Iter but allows to pass a cancel chan to make the iteration cancelable
-  * **Len** - length of the slice
-  * **Cap** - capacity of the slice
 
     ```go
     //Sample SortedSlice
@@ -100,16 +91,6 @@ What a mutex does is basically to acquire a lock when it needs to access our con
         }
     }
     ```
-`Map`and `SortedMap` have their relevant constructors as `NewMap` and `NewSortedMap`. Both have the following methods:
-  * **Set** adds an item to a concurrent map
-  * **Get** retrieves the value for a concurrent map item
-  * **GetItemByIndex** retrieves the value for a concurrent map item
-  * **GetKeyByItem** - retrieves the key for a concurrent map item by item
-  * **Delete removes the value/key pair of a concurrent map item
-  * **GetKeys** returns a slice of all the keys present
-  * **Iter** iterates over the items in a concurrent map Each item is sent over a channel, so that we can iterate over the map using the builtin range keyword
-  * **IterWithCancel** same as Iter but it allows to pass a cancel chan to make the iteration cancelable
-  * **Len** - length of the map
   
     ```go
     //Sample SortedMap
@@ -122,10 +103,55 @@ What a mutex does is basically to acquire a lock when it needs to access our con
 		fmt.Printf("%v:%v\n", item.Key, item.Value)
 	}
     ```
+## gooldi: Handling channel cancellation
+
+<a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> provides an ordered layered mechanism in order to handle cancellation of channels. While we explored the use of the go `context`package to use cancelable contexts, the way it deals with the cancellation is not fit for purpose for the processing mechanisms that are part of the <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> library. Cancellation within the `context` package happens in a non-deterministic way and it can lead to exceptions due to the closure of channels that are still active.
+<a href="./concurrency/done-manager.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=DoneManager&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> and <a href="./concurrency/done-handler.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=DoneHandler&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> are the two types that manage channel cancellation in <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a>. `DoneManager` registers `DoneHandlers` and keeps track of them. It has the capability to organize the `DoneHandlers`in a layered `Map` and when cancelling the `DoneManager`loops through this map by layers. It has also the capability to add a delay between layer cancellation, allowing for a graceful shutdown.
+In `DoneManager` a deadline and a timeout can be set, so cancellation can be triggered when these are reached.
+In `DoneHandler` we can setup a deadline that will cancel that specific handler and notify the `DoneManager` for proper de-registration of the `DoneHandler`.
+
+```go
+//DoneManager and DoneHandler Sample
+dm := concurrency.NewDoneManager(
+    concurrency.DoneManagerWithDelay(1*time.Millisecond),
+    concurrency.DoneManagerWithTimeout(100*time.Millisecond),
+)
+dh := dm.AddNewDoneHandler(0)
+dh1 := dm.AddNewDoneHandler(1)
+go func() {
+    for {
+        select {
+        case <-dh.Done():
+            fmt.Printf("We are done with delay and timeout - on layer 0 -> %v: %v\n", dh.ID(), dh.Err())
+            return
+        }
+    }
+}()
+go func() {
+    for {
+        select {
+        case <-dh1.Done():
+            fmt.Printf("We are done with delay and timeout - on layer 1 -> %v: %v\n", dh1.ID(), dh1.Err())
+            return
+        }
+    }
+}()
+go func() {
+    for {
+        select {
+        case <-dm.Done():
+            fmt.Printf("We are done with delay and timeout - on DoneManager -> %v: %v\n", dm.ID(), dm.Err())
+            return
+        }
+    }
+}()
+
+time.Sleep(1000 * time.Millisecond)
+
+```
 
 What it does
 
-- Done Manager and Done Handler
 - gooldi Stream Processing Entities: Message, MessagePair, Broadcast, Processor, Filter,MessageMultiplexer and MultiMessageMultiplexer
 - Deterministic Stream Processing
 - Non-Deterministic Stream Processing
