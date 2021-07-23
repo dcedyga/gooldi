@@ -122,7 +122,11 @@ go func() {
     for {
         select {
         case <-dh.Done():
-            fmt.Printf("We are done with delay and timeout - on layer 0 -> %v: %v\n", dh.ID(), dh.Err())
+            fmt.Printf(
+                "We are done with delay and timeout - on layer 0 -> %v: %v\n",
+                dh.ID(),
+                dh.Err(),
+            )
             return
         }
     }
@@ -131,7 +135,11 @@ go func() {
     for {
         select {
         case <-dh1.Done():
-            fmt.Printf("We are done with delay and timeout - on layer 1 -> %v: %v\n", dh1.ID(), dh1.Err())
+            fmt.Printf(
+                "We are done with delay and timeout - on layer 1 -> %v: %v\n",
+                dh1.ID(),
+                dh1.Err(),
+            )
             return
         }
     }
@@ -140,7 +148,11 @@ go func() {
     for {
         select {
         case <-dm.Done():
-            fmt.Printf("We are done with delay and timeout - on DoneManager -> %v: %v\n", dm.ID(), dm.Err())
+            fmt.Printf(
+                "We are done with delay and timeout - on DoneManager -> %v: %v\n",
+                dm.ID(),
+                dm.Err(),
+            )
             return
         }
     }
