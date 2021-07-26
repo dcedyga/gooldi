@@ -167,18 +167,14 @@ time.Sleep(1000 * time.Millisecond)
 
 ## gooldi: Stream Processing Entities
 
-The foundation of <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi's&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> stream processing is based on the following concepts. We have a <a href="./concurrency/done-manager.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Message&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> and <a href="./concurrency/done-manager.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MessagePair&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> entities that are shared across the pipeline and acts as the interchangeable entity within the flow of the process. These entities are the representation of the Stream as a Stream of Messages or MessagePairs. Their structure is as follows:
+The foundation of <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi's&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> stream processing is based on the following concepts. We have a <a href="./concurrency/message.go#L15"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Message&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> and <a href="./concurrency/message.go#L43"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MessagePair&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> entities that are shared across the pipeline and acts as the interchangeable entity within the flow of the process. These entities are the representation of the Stream as a Stream of Messages or MessagePairs. 
+
+#### Message and MessagePair
+Their structure is as follows:
 
 ```go
 /*
-Message - Struct that represents an message in the context of the concurrency package.
-Contains:
- - ID: the ID of the message
- - Message: the Message,
- - TimeInNano: the time that was produced
- - MsgType: the type of the message,
- - CorrelationKey: a correlation key to correlate to other messages
- - Index: the index related to the order that can be used to produce deterministic outputs
+Message 
 */
 type Message struct {
 	ID         string
@@ -189,16 +185,45 @@ type Message struct {
 	Index int64
 }
 
+/*
+MessagePair
+*/
+type MessagePair struct {
+	In             *Message
+	Out            *Message
+	Index          int64
+	CorrelationKey int64
+}
+
 ```
+<a href="./concurrency/message.go#L15"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Message&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a>  is a Struct that represents an message in the context of the concurrency package. With the following properties:
+ - **ID**: the ID of the message
+ - **Message**: the Message,
+ - **TimeInNano**: the time that was produced
+ - **MsgType**: the type of the message,
+ - **CorrelationKey**: a correlation key to correlate to other messages
+ - **Index**: the index related to the order that can be used to produce deterministic outputs
 
+<a href="./concurrency/message.go#L43"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MessagePair&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> is a Struct that represents an input/output message Pair in the context of the concurrency package. With the following properties:
+- **In**: represents an Input Message,
+- **Out**: represents an Output Message,
+- **Index**: a index number that is usefull to define the processing order of the MessagePair 
+- **CorrelationKey**: a correlationKey to correlate to other messages
 
+#### BCaster
 
+#### Processor and Filter
 
-Message, MessagePair, Broadcast, Processor, Filter,MessageMultiplexer and MultiMessageMultiplexer
+#### MsgMultiplexer
+
+#### MultiMsgMultiplexer
 
 ### Highly customizable
 
-<a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> is highly customizable. For example one can define its own Message entity to represent better the Stream that it wants to process. As an example we could have a `CustomMsg`like the following:
+<a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> is highly customizable. For example one can define its own Message entity to represent better the Stream that it wants to process. 
+
+
+As an example we could have a `CustomMsg`like the following:
 ```go
 type CustomMsg struct {
 	Key     int64

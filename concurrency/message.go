@@ -15,12 +15,12 @@ type MessagePairOption func(*MessagePair)
 /*
 Message - Struct that represents an message in the context of the concurrency package.
 Contains:
- - ID of the message
- - the Message,
- - the time that was produced
- - the type of the message,
- - a correlation key
- - the index related to the order that can be used to produce deterministic outputs
+ - ID: the ID of the message
+ - Message: the Message,
+ - TimeInNano: the time that was produced
+ - MsgType: the type of the message,
+ - CorrelationKey: a correlation key to correlate to other messages
+ - Index: the index related to the order that can be used to produce deterministic outputs
 */
 type Message struct {
 	ID             string
@@ -40,8 +40,14 @@ func IsMessagePtr(t interface{}) bool {
 	}
 }
 
-// MessagePair - Struct that represents an input/output message Pair in the context of the concurrency package. Contains an In Message,
-// an Out Message, and a index number that is usefull to define the processing order of the MessagePair and a correlationKey
+/*
+MessagePair - Struct that represents an input/output message Pair in the context of the concurrency package.
+Contains:
+- In: represents an Input Message,
+- Out: represents an Output Message,
+- Index: a index number that is usefull to define the processing order of the MessagePair
+- CorrelationKey: a correlationKey to correlate to other messages
+*/
 type MessagePair struct {
 	In             *Message
 	Out            *Message
