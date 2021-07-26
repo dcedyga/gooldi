@@ -7,6 +7,8 @@
 
 <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> provides a thread-safe implementation of Map, Slice, SortedMap and SortedSlice to access to the relevant maps and slice types shared across goroutines without race conditions.
 
+<a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> main purpose is to provide deterministic and non-deterministic stream processing capabilities and to do so, the following entities have been implemented: Message, MessagePair, Bcaster, Processor, Filter,MessageMultiplexer and MultiMessageMultiplexer. With these entities complex pipeline and flow architectures can be implemented with throughputs that are close to 500k processed messages per second in a macbook pro with 32G of RAM and 2,9 GHz Intel Core i9 processor.
+
 ## Concurrency in Go
 ```
 Concurrency is about dealing with lots of things at once. It is a way to structure software, 
@@ -163,12 +165,42 @@ time.Sleep(1000 * time.Millisecond)
 
 ```
 
-What it does
+## gooldi: Stream Processing Entities
 
-- gooldi Stream Processing Entities: Message, MessagePair, Broadcast, Processor, Filter,MessageMultiplexer and MultiMessageMultiplexer
-- Deterministic Stream Processing
-- Non-Deterministic Stream Processing
-- Highly customizable
+The foundation of <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi's&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> stream processing is based on the following concepts. We have a <a href="./concurrency/done-manager.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Message&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> and <a href="./concurrency/done-manager.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MessagePair&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> entities that are shared across the pipeline and acts as the interchangeable entity within the flow of the process. These entities are the representation of the Stream as a Stream of Messages or MessagePairs. Their structure is as follows:
 
-How it does it
+```go
+/* Message - Struct that represents an message in the context of the concurrency package. Contains the ID of the
+message, the Message, the time that was produced and the type of the message, a correlation key and the index
+related to the order that can be used to produce deterministic outputs*/
+type Message struct {
+	ID         string
+	Message    interface{}
+	TimeInNano int64
+	MsgType    string
+	CorrelationKey int64
+	Index int64
+}
+
+```
+
+
+
+
+Message, MessagePair, Broadcast, Processor, Filter,MessageMultiplexer and MultiMessageMultiplexer
+
+### Highly customizable
+
+<a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> is highly customizable. For example one can define its own Message entity to represent better the Stream that it wants to process. As an example we could have a `CustomMsg`like the following:
+```go
+type CustomMsg struct {
+	Key     int64
+	Msg     interface{}
+	MsgType string
+	Index   int64
+}
+```
+
+## gooldi: Deterministic and Non-Deterministic Stream Processing
+
 

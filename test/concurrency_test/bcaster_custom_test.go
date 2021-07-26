@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	concurrency "github.com/dcedyga/gooldi/concurrency"
+	"github.com/stretchr/testify/assert"
 
 	"time"
 )
@@ -86,6 +87,7 @@ func (suite *Suite) Test04BCaster01CustomProcessors() {
 
 			i++
 		}
+		assert.Greater(suite.T(), i, 0)
 		fmt.Printf("Total Messages from Processor %v: %v,\n", w2.ID(), i)
 	}()
 
