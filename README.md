@@ -170,9 +170,9 @@ time.Sleep(1000 * time.Millisecond)
 The foundation of <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi's&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> stream processing is based on the following concepts. We have a <a href="./concurrency/done-manager.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Message&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> and <a href="./concurrency/done-manager.go#L01"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MessagePair&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> entities that are shared across the pipeline and acts as the interchangeable entity within the flow of the process. These entities are the representation of the Stream as a Stream of Messages or MessagePairs. Their structure is as follows:
 
 ```go
-/* Message - Struct that represents an message in the context of the concurrency package. Contains the ID of the
-message, the Message, the time that was produced and the type of the message, a correlation key and the index
-related to the order that can be used to produce deterministic outputs*/
+/* Message - Struct that represents an message in the context of the concurrency package. 
+Contains the ID of the message, the Message, the time that was produced and the type of the message, 
+a correlation key and the index related to the order that can be used to produce deterministic outputs*/
 type Message struct {
 	ID         string
 	Message    interface{}
