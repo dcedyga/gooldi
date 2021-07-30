@@ -293,8 +293,8 @@ func customProcess3(pr *Processor, input interface{}, params ...interface{}) int
 }
 //ProcessorCustomEventTransformFn
 func ProcessorCustomEventTransformFn(p *Processor, 
-input interface{}, 
-result interface{}) interface{} {
+    input interface{}, 
+    result interface{}) interface{} {
 	var event *CustomEvent
 	var resultMsg *Message
 	if input != nil {
