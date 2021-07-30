@@ -172,7 +172,7 @@ The foundation of <a href="https://github.com/dcedyga/gooldi"><img align="center
 - <a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> is a broadcaster that allows to broadcast any type of message to its listeners. You can register a listener with the `AddListener`method that returns a channel of type interface{}. <a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> uses a transformation function, that is highly customizable (you can use your own), to map the input message to an output structure. the default transform function called `defaultBCasterTransformFn` Gets the bcaster, input and outputs the input with no changes. A register listener can be removed from the collection of listeners by using the `RemoveListener` method.
 - 
 
-#### *Message and MessagePair*
+#### *1. Message and MessagePair*
 
 ```go
 /*
@@ -223,7 +223,7 @@ NewMessage(fmt.Sprintf("This is message 1"),
     MessageWithIndex(1),
 )
 ```
-#### *BCaster*
+#### *2. BCaster*
 
 <a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> Is a broadcaster that allows to send messages of different types to registered listeners using go concurrency patterns. Listeners are chan interfaces{} allowing for go concurrent communication. Closure of BCaster is handle by a concurrency.DoneHandler that allows to control they way a set of go routines are closed in order to prevent deadlocks and unwanted behaviour It detects when listeners are done and performs the required cleanup to ensure that messages are sent to the active listeners.
 
@@ -274,11 +274,11 @@ go func() {
 
 }()
 ```
-#### *Processor and Filter*
+#### *3. Processor and Filter*
 
-#### *MsgMultiplexer*
+#### *4. MsgMultiplexer*
 
-#### *MultiMsgMultiplexer*
+#### *5. MultiMsgMultiplexer*
 
 ## gooldi: Deterministic and Non-Deterministic Stream Processing
 ## gooldi:Highly customizable
