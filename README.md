@@ -235,9 +235,6 @@ NewMessage(fmt.Sprintf("This is message 1"),
 
 <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> is highly customizable. For example one can define its own Message entity to represent better the Stream that it wants to process. With its own `BCaster`that has a specific transformation/mapping function of the Broadcast output.
 
-### BCaster and processor customization
-As an example we could have a `CustomEvent` with an InitMessage and OutMessage properties, the BCaster has a custom transform function called `BCasterCustomEventTransformFn` which transforms an standard input `Message` into a `CustomEvent`that has the InitMessage and OutMessage properties filled with the input `Message`. The `BCaster` broadcasts the `CustomEvent`to all the registered listeners, in this case one `Processor`that uses it process function to square the Message property(payload) of the OutMessage of the incoming `CustomEvent` producing a new standard `Message` which is transformed by the `ProcessorCustomEventTransformFn` to produce a new `CustomEvent` with the InitMessage of the incomming `CustomEvent` as InitMessage property and the result `Message`of the process function as OutMessage property. This example just gives us an idea of how flexible <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> is.
-
 **Process functions**
 * The `Processor` process functions follow this primitive:
 ```go 
@@ -257,7 +254,12 @@ func func(p *Processor, input interface{}, result interface{}) interface{} {
     //Code
 }
 ```
+
+### BCaster and processor customization
+As an example we could have a `CustomEvent` with an InitMessage and OutMessage properties, the BCaster has a custom transform function called `BCasterCustomEventTransformFn` which transforms an standard input `Message` into a `CustomEvent`that has the InitMessage and OutMessage properties filled with the input `Message`. The `BCaster` broadcasts the `CustomEvent`to all the registered listeners, in this case one `Processor`that uses it process function to square the Message property(payload) of the OutMessage of the incoming `CustomEvent` producing a new standard `Message` which is transformed by the `ProcessorCustomEventTransformFn` to produce a new `CustomEvent` with the InitMessage of the incomming `CustomEvent` as InitMessage property and the result `Message`of the process function as OutMessage property. This example just gives us an idea of how flexible <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> is.
+
 Please find below the entire code snippet:
+
 ```go
 //BCaster and processor customization
 
