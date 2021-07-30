@@ -169,7 +169,7 @@ time.Sleep(1000 * time.Millisecond)
 
 The foundation of <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi's&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> stream processing is based on the following concepts. We have:
 - <a href="./concurrency/message.go#L15"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Message&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> and <a href="./concurrency/message.go#L43"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MessagePair&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> entities that are shared across the pipeline and acts as the interchangeable entity within the flow of the process. These entities are the representation of the Stream as a Stream of Messages or MessagePairs. 
-- <a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> is a broadcaster that allows to broadcast any type of message to its listeners. You can register a listener with the `AddListener`method that returns a channel of type interface{}. <a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> uses a transformation function, that is highly customizable (you can use your own), to map the input message to an output structure. the default transform function called `defaultBCasterTransformFn` Gets the bcaster, input and outputs the input with no changes.
+- <a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> is a broadcaster that allows to broadcast any type of message to its listeners. You can register a listener with the `AddListener`method that returns a channel of type interface{}. <a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> uses a transformation function, that is highly customizable (you can use your own), to map the input message to an output structure. the default transform function called `defaultBCasterTransformFn` Gets the bcaster, input and outputs the input with no changes. A register listener can be removed from the collection of listeners by using the `RemoveListener` method.
 - 
 
 #### *Message and MessagePair*
@@ -214,16 +214,66 @@ type MessagePair struct {
 
 `NewMessage`and `NewMessagePair`are constructors that simplify the creation of these entities.
 ```go
-//Message constructor
+/*
+Message constructor
+*/
 NewMessage(fmt.Sprintf("This is message 1"),
     "string",
     MessageWithCorrelationKey(1),
     MessageWithIndex(1),
 )
 ```
-
 #### *BCaster*
 
+<a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> Is a broadcaster that allows to send messages of different types to registered listeners using go concurrency patterns. Listeners are chan interfaces{} allowing for go concurrent communication. Closure of BCaster is handle by a concurrency.DoneHandler that allows to control they way a set of go routines are closed in order to prevent deadlocks and unwanted behaviour It detects when listeners are done and performs the required cleanup to ensure that messages are sent to the active listeners.
+
+```go
+/*
+BCaster
+*/
+type BCaster struct {
+	id           string
+	listeners    *SortedMap
+	closed       bool
+	listenerLock *sync.RWMutex
+	MsgType      string
+	doneHandler  *DoneHandler
+	lock         *sync.RWMutex
+	transformFn  func(b *BCaster, input interface{}) interface{}
+}
+```
+It has the following methods:
+
+* **NewBCaster** - Constructor which gets a doneHandler and a msgType and retrieves a BCaster pointer. It also allows to inject BCasterTransformFn as an option
+* **ID** - retrieves the Id of the Bcaster
+* **BCasterTransformFn** - option to add a function to transform the output into the desired output structure of the BCaster
+* **AddListener** - creates a listener as chan interface{} with a DoneHandler in order to manage its closure and pass it to the requestor so it can be used to consume messages from the Bcaster
+* **RemoveListenerByKey** - Removes a listener by its key value
+* **RemoveListener** - removes a listener
+* **Broadcast** - Broadcast a message to all the active registered listeners. It uses a transform function to map the input message to a desired output. The default transform function just returns the input message to be broadcasted to all the active registered listeners.
+* **defaultBCasterTransformFn** - Private method and default transform function of the `BCaster`that gets the bcaster input and outputs the input without any variation.
+
+```go
+//BCaster sample
+dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(50 * time.Millisecond))
+dh := dm.AddNewDoneHandler(0)
+//Create caster
+b := concurrency.NewBCaster(dh,
+    "string",
+)
+//...
+go func() {
+    for msgId := 0; msgId < 30; msgId++ {
+        e := concurrency.NewMessage(
+            msgId,
+            b.MsgType,
+        )
+        b.Broadcast(e)
+
+    }
+
+}()
+```
 #### *Processor and Filter*
 
 #### *MsgMultiplexer*
@@ -256,8 +306,6 @@ func func(p *Processor, input interface{}, result interface{}) interface{} {
 ```
 
 ### BCaster and processor customization
-
-
 
 <img align="center" src="./img/robots-Custom-BCasterProcessor.png" />
 
