@@ -73,7 +73,7 @@ What a mutex does is basically to acquire a lock when it needs to access our con
 
 ```go
 //Sample SortedSlice
-s := concurrency.NewSortedSlice()
+s := NewSortedSlice()
 cancel := make(chan interface{})
 s.Append("Juan")
 s.Append("Pepi")
@@ -96,7 +96,7 @@ for item := range s.IterWithCancel(cancel) {
   
 ```go
 //Sample SortedMap
-m := concurrency.NewSortedMap()
+m := NewSortedMap()
 cancel := make(chan interface{})
 for i := 0; i < 10; i++ {
     m.Set(i, i)
@@ -115,9 +115,9 @@ In `DoneHandler` we can setup a deadline that will cancel that specific handler 
 
 ```go
 //DoneManager and DoneHandler Sample
-dm := concurrency.NewDoneManager(
-    concurrency.DoneManagerWithDelay(1*time.Millisecond),
-    concurrency.DoneManagerWithTimeout(100*time.Millisecond),
+dm := NewDoneManager(
+    DoneManagerWithDelay(1*time.Millisecond),
+    DoneManagerWithTimeout(100*time.Millisecond),
 )
 dh := dm.AddNewDoneHandler(0)
 dh1 := dm.AddNewDoneHandler(1)
@@ -167,10 +167,12 @@ time.Sleep(1000 * time.Millisecond)
 
 ## gooldi: Stream Processing Entities
 
-The foundation of <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi's&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> stream processing is based on the following concepts. We have a <a href="./concurrency/message.go#L15"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Message&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> and <a href="./concurrency/message.go#L43"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MessagePair&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> entities that are shared across the pipeline and acts as the interchangeable entity within the flow of the process. These entities are the representation of the Stream as a Stream of Messages or MessagePairs. 
+The foundation of <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi's&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> stream processing is based on the following concepts. We have:
+- <a href="./concurrency/message.go#L15"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Message&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> and <a href="./concurrency/message.go#L43"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MessagePair&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> entities that are shared across the pipeline and acts as the interchangeable entity within the flow of the process. These entities are the representation of the Stream as a Stream of Messages or MessagePairs. 
+- <a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> is a broadcaster that allows to broadcast any type of message to its listeners. You can register a listener with the `AddListener`method that returns a channel of type interface{}. <a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> uses a transformation function, that is highly customizable (you can use your own), to map the input message to an output structure. the default transform function called `defaultBCasterTransformFn` Gets the bcaster, input and outputs the input with no changes.
+- 
 
 #### *Message and MessagePair*
-Their structure is as follows:
 
 ```go
 /*
@@ -210,6 +212,16 @@ type MessagePair struct {
 - **Index**: a index number that is usefull to define the processing order of the MessagePair 
 - **CorrelationKey**: a correlationKey to correlate to other messages
 
+`NewMessage`and `NewMessagePair`are constructors that simplify the creation of these entities.
+```go
+//Message constructor
+NewMessage(fmt.Sprintf("This is message 1"),
+    "string",
+    MessageWithCorrelationKey(1),
+    MessageWithIndex(1),
+)
+```
+
 #### *BCaster*
 
 #### *Processor and Filter*
@@ -218,21 +230,133 @@ type MessagePair struct {
 
 #### *MultiMsgMultiplexer*
 
-### Highly customizable
+## gooldi: Deterministic and Non-Deterministic Stream Processing
+## gooldi:Highly customizable
 
-<a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> is highly customizable. For example one can define its own Message entity to represent better the Stream that it wants to process. 
+<a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> is highly customizable. For example one can define its own Message entity to represent better the Stream that it wants to process. With its own `BCaster`that has a specific transformation/mapping function of the Broadcast output.
 
+#### BCaster and processor customization
+As an example we could have a `CustomEvent` with an InitMessage and OutMessage properties, the BCaster has a custom transform function called `BCasterCustomEventTransformFn` which transforms an standard input `Message` into a `CustomEvent`that has the InitMessage and OutMessage properties filled with the input `Message`. The `BCaster` broadcasts the `CustomEvent`to all the registered listeners, in this case one `Processor`that uses it process function to square the Message property(payload) of the OutMessage of the incoming `CustomEvent` producing a new standard `Message` which is transformed by the `ProcessorCustomEventTransformFn` to produce a new `CustomEvent` with the InitMessage of the incomming `CustomEvent` as InitMessage property and the result `Message`of the process function as OutMessage property. This example just gives us an idea of how flexible <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> is.
 
-As an example we could have a `CustomMsg`like the following:
-```go
-type CustomMsg struct {
-	Key     int64
-	Msg     interface{}
-	MsgType string
-	Index   int64
-}
+**Process functions**
+* The `Processor` process functions follow this primitive:
+```go 
+func func(pr *Processor, input interface{}, params ...interface{}) interface{} {}
 ```
 
-## gooldi: Deterministic and Non-Deterministic Stream Processing
+**Mapping/Transformation functions**
+* The `BCaster` transformation functions follow this primitive:
+```go 
+func func(b *BCaster, input interface{}) interface{}{
+    //Code
+}
+```
+* The `Processor` transformation functions follow this primitive:
+```go
+func func(p *Processor, input interface{}, result interface{}) interface{} {
+    //Code
+}
+```
+Please find below the entire code snippet:
+```go
+//BCaster and processor customization
+
+//CustomEvent
+type CustomEvent struct {
+	InitMessage *Message
+	OutMessage  *Message
+}
+
+//BCasterCustomEventTransformFn
+func BCasterCustomEventTransformFn(b *BCaster, input interface{}) interface{} {
+	var msg *Message
+	if input != nil {
+		msg = input.(*Message)
+	}
+	e := &CustomEvent{
+		InitMessage: msg,
+		OutMessage:  msg,
+	}
+	return e
+}
+
+//customProcess3
+func customProcess3(pr *Processor, input interface{}, params ...interface{}) interface{} {
+	event := input.(*CustomEvent)
+	//id := params[0]
+	i := event.OutMessage.Message.(int) * event.OutMessage.Message.(int)
+	return NewMessage(i,
+		event.OutMessage.MsgType,
+		MessageWithIndex(event.OutMessage.Index),
+		MessageWithCorrelationKey(event.OutMessage.CorrelationKey),
+	)
+}
+//ProcessorCustomEventTransformFn
+func ProcessorCustomEventTransformFn(p *Processor, input interface{}, result interface{}) interface{} {
+	var event *CustomEvent
+	var resultMsg *Message
+	if input != nil {
+		event = input.(*CustomEvent)
+	}
+	if result != nil {
+		resultMsg = result.(*Message)
+	}
+	r := &CustomEvent{
+		InitMessage: event.InitMessage,
+		OutMessage:  resultMsg,
+	}
+	return r
+}
+//main
+func main(){
+    dm := NewDoneManager(DoneManagerWithDelay(1 * time.Millisecond))
+	defer dm.GetDoneFunc()()
+	dh := dm.AddNewDoneHandler(0)
+	dh1 := dm.AddNewDoneHandler(1)
+	//Create caster
+	b := NewBCaster(dh,
+		"bcaster",
+		BCasterTransformFn(BCasterCustomEventTransformFn),
+	)
+	//Create Processors
+	w2 := NewProcessor(
+		fmt.Sprintf("worker%v", 2),
+		dh1,
+		ProcessorWithIndex(2),
+		ProcessorWithInputChannel(b.AddListener(dh1)),
+		ProcessorTransformFn(ProcessorCustomEventTransformFn),
+	)
+	go w2.Process(customProcess3, 2)
+	time.Sleep(300 * time.Microsecond)
+	// Get all multiplexed messages
+	go func() {
+		i := 0
+		for v := range w2.OutputChannel() {
+			_ = v
+			i++
+		}
+		fmt.Printf("Total Messages from Processor %v: %v,\n", w2.ID(), i)
+	}()
+	// Broadcast Messages
+	go func() {
+		for msgId := 0; msgId < 300000; msgId++ {
+			e := NewMessage(
+				msgId,
+				b.MsgType,
+			)
+			b.Broadcast(e)
+		}
+	}()
+	time.Sleep(1000 * time.Millisecond)
+} 
+```
+#### Processor and MsgMultiplexer customization
+
+```go
+//Processor and MsgMultiplexer customization
+
+
+```
+
 
 
