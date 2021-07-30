@@ -268,7 +268,8 @@ type CustomEvent struct {
 }
 
 //BCasterCustomEventTransformFn
-func BCasterCustomEventTransformFn(b *BCaster, input interface{}) interface{} {
+func BCasterCustomEventTransformFn(b *BCaster, 
+    input interface{}) interface{} {
 	var msg *Message
 	if input != nil {
 		msg = input.(*Message)
@@ -281,7 +282,9 @@ func BCasterCustomEventTransformFn(b *BCaster, input interface{}) interface{} {
 }
 
 //customProcess3
-func customProcess3(pr *Processor, input interface{}, params ...interface{}) interface{} {
+func customProcess3(pr *Processor, 
+    input interface{}, 
+    params ...interface{}) interface{} {
 	event := input.(*CustomEvent)
 	//id := params[0]
 	i := event.OutMessage.Message.(int) * event.OutMessage.Message.(int)
