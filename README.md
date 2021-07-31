@@ -427,6 +427,71 @@ More code samples in:
 
 #### *5. MsgMultiplexer*
 
+<a href="./concurrency/msg-multiplexer.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MsgMultiplexer&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> The default implementation MsgMultiplexer allows to create complex patterns where a Broadcaster can emit an message to multiple processors (consumers) that can potentially represent multiple processing systems, do the relevant calculation and multiplex the multiple outputs into a single channel for simplified consumption. Its main function is to Mulitplex a set of parallel processors that process a common initial concurrency.Message converging them into one channel,where the output is a concurrency.Message which Message property is a sortedmap of the output values of the processors grouped by initial concurrency.Message CorrelationKey and ordered by index value of each processor. Closure of MsgMultiplexer is handle by a concurrency.DoneHandler that allows to control they way a set of go routines are closed in order to prevent deadlocks and unwanted behaviour MsgMultiplexer outputs the multiplexed result in one channel using the channel bridge pattern. MsgMultiplexer default behaviour can be overridden by providing a MsgMultiplexerGetItemKeyFn to provide the comparison key of the items of a channel, with this function MsgMultiplexer has an algorithm to group the processed messages related to the same source into a SortedMap.
+
+```go
+/*
+MsgMultiplexer
+*/
+type MsgMultiplexer struct {
+	id                      string
+	inputChannels           *Map
+	doneHandler             *DoneHandler
+	preStreamMap            *Map
+	inputChannelsLastRegLen int
+	stream                  chan (<-chan interface{})
+	lock                    *sync.RWMutex
+	index                   int64
+	minIndexKey             interface{}
+	MsgType                 string
+	getItemKeyFn            func(v interface{}) int64
+	transformFn             func(mp *MsgMultiplexer, sm *SortedMap, correlationKey int64) interface{}
+}
+```
+
+* **NewMsgMultiplexer** - Constructor
+* **MsgMultiplexerIndex** - option to add the index value to the MsgMultiplexer
+* **MsgMultiplexerGetItemKeyFn** - option to add a function to resolve the key value of an item of the channel to the MsgMultiplexer
+* **MsgMultiplexerTransformFn** - option to add a function to transform the SortedMap output into the desired output structure to the MsgMultiplexer
+* **ID** - retrieves the Id of the MsgMultiplexer
+* **Index** - retrieves the Index of the MsgMultiplexer
+* **Set** - Registers a channel in the MsgMultiplexer, starts processing it and logs the length of the registered channels map.
+* **Get** - Retrieves a channel reqistered in the MsgMultiplexer by key
+* **Iter** - iterates over the items in the Multiplexer. Each item is sent over a channel, so that we can iterate over the it using the builtin range keyword
+* **PrintPreStreamMap** - prints the preStreamMap
+* **defaultGetItemKeyFn** - Gets the key value used by the comparator in order to group the Messages in the SortedMap. Can be overridden for a more generic implementation that is not Message Oriented
+* **MsgMultiplexerMessagePairGetItemKeyFn** - Gets the key value used by the comparator in order to group the Messages in the SortedMap. Can be overridden for a more generic implementation that is not Message Oriented
+* **defaultTransformFn** - Transforms the SortedMap output into an Message for future consumption as part of the output channel of the MsgMultiplexer. Can be overridden for a more generic implementation
+* **MsgMultiplexerMessagePairTransformFn** - Transforms the SortedMap output into an Message for future consumption as part of the output channel of the MsgMultiplexer. Can be overridden for a more generic implementation
+
+```go
+//MsgMultiplexer sample
+
+dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(1 * time.Millisecond))
+defer dm.GetDoneFunc()()
+dh := dm.AddNewDoneHandler(0)
+dh1 := dm.AddNewDoneHandler(1)
+dh2 := dm.AddNewDoneHandler(2)
+//Create caster
+b := concurrency.NewBCaster(dh,
+    "string",
+)
+//Create Multiplexer
+mp := concurrency.NewMsgMultiplexer(dh2,
+    b.MsgType, concurrency.MsgMultiplexerIndex(1),
+)
+defer func() {
+    dm.GetDoneFunc()()
+    mp.PrintPreStreamMap()
+}()
+//Create Processors
+w := createProcessors(mp, b, dh1, 4)
+
+```
+
+More code samples in:
+<a href="./concurrency_test/base_test.go">Base Test</a> and <a href="./concurrency_test/msg_multiplexer_patterns_test.go">Msg Multiplexer Patterns Test</a>
+
 #### *6. MultiMsgMultiplexer*
 
 ## gooldi: Deterministic and Non-Deterministic Stream Processing

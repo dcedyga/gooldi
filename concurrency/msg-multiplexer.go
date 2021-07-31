@@ -20,10 +20,9 @@ type MsgMultiplexerOption func(*MsgMultiplexer)
 // are closed in order to prevent deadlocks and unwanted behaviour
 // MsgMultiplexer outputs the multiplexed result in one channel using the channel bridge pattern.
 // MsgMultiplexer default behaviour can be overridden by providing a MsgMultiplexerGetItemKeyFn to provide the comparison key of
-// the items of a channel, MsgMultiplexerGetLastRegKeyFn which should give the key to compare to. With these two items MsgMultiplexer
+// the items of a channel, with this function MsgMultiplexer
 // has an algorithm to group the processed messages related to the same source into a SortedMap.
-// MsgMultiplexerGetChannelItemIndexeFn allows to get the index order of the relevant channel and MsgMultiplexerTransformFn
-// allows to transform the output into the desired structure.
+
 type MsgMultiplexer struct {
 	id                      string
 	inputChannels           *Map
@@ -37,15 +36,6 @@ type MsgMultiplexer struct {
 	MsgType                 string
 	getItemKeyFn            func(v interface{}) int64
 	transformFn             func(mp *MsgMultiplexer, sm *SortedMap, correlationKey int64) interface{}
-}
-
-// inputChannelsCountLogItem - keeps track of the length of the inputChannels Map when a channel is registered.
-// inputChannelsCountLogItem is stored in inputChannelsCountLog SortedMap with a key that references the
-// time that the channel is registered. The Multiplexer algorithm uses this structure to derive how many
-// messages need to gather before sending the outputMap related to an initial input Message.
-type inputChannelsCountLogItem struct {
-	channel interface{}
-	length  int
 }
 
 //NewMsgMultiplexer - Constructor
