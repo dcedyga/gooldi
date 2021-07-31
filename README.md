@@ -342,7 +342,7 @@ go w.Process(process, 1)
 go func() {
     i := 0
     for pe := range w.OutputChannel() {
-        pr := pe.Value.(*concurrency.Message)
+        pr := pe.Value.(*Message)
         fmt.Printf("CorrelationKey(%v) - Index(%v) - TimeInNano(%v) - ID(%v) - MsgType(%v) - Message: %v \n", pr.CorrelationKey, pr.Index, pr.TimeInNano, pr.ID, pr.MsgType, pr.Message)
     }
 }()
@@ -389,17 +389,17 @@ type Filter struct {
 //Filter sample
 
 //The filter function
-func filterFn(f *concurrency.Filter, input interface{}, params ...interface{}) bool {
-	msg := input.(*concurrency.MessagePair)
+func filterFn(f *Filter, input interface{}, params ...interface{}) bool {
+	msg := input.(*MessagePair)
 	i := msg.In.Message.(int) % 2
 	return i == 0
 }
 // The Filter
-filter := concurrency.NewFilter(
+filter := NewFilter(
     fmt.Sprintf("filter%v", 5),
     dh1,
-    concurrency.FilterWithIndex(5),
-    concurrency.FilterWithInputChannel(mp.Iter()),
+    FilterWithIndex(5),
+    FilterWithInputChannel(mp.Iter()),
 )
 go filter.Filter(filterFn)
 
@@ -408,11 +408,11 @@ go func() {
     i := 0
     for v := range filter.OutputChannel() {
         _ = v
-        item := v.(*concurrency.MessagePair)
-        s := item.Out.Message.(*concurrency.SortedMap)
+        item := v.(*MessagePair)
+        s := item.Out.Message.(*SortedMap)
         fmt.Printf("-------\n")
         for pe := range s.Iter() {
-            pr := pe.Value.(*concurrency.MessagePair).Out
+            pr := pe.Value.(*MessagePair).Out
             fmt.Printf("CorrelationKey(%v) - Index(%v) - TimeInNano(%v) - ID(%v) - MsgType(%v) - Message: %v \n", pr.CorrelationKey, pr.Index, pr.TimeInNano, pr.ID, pr.MsgType, pr.Message)
         }
         i++
@@ -427,7 +427,7 @@ More code samples in:
 
 #### *5. MsgMultiplexer*
 
-<a href="./concurrency/msg-multiplexer.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MsgMultiplexer&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> The default implementation MsgMultiplexer allows to create complex patterns where a Broadcaster can emit an message to multiple processors (consumers) that can potentially represent multiple processing systems, do the relevant calculation and multiplex the multiple outputs into a single channel for simplified consumption. Its main function is to Mulitplex a set of parallel processors that process a common initial concurrency.Message converging them into one channel,where the output is a concurrency.Message which Message property is a sortedmap of the output values of the processors grouped by initial concurrency.Message CorrelationKey and ordered by index value of each processor. Closure of MsgMultiplexer is handle by a concurrency.DoneHandler that allows to control they way a set of go routines are closed in order to prevent deadlocks and unwanted behaviour MsgMultiplexer outputs the multiplexed result in one channel using the channel bridge pattern. MsgMultiplexer default behaviour can be overridden by providing a MsgMultiplexerGetItemKeyFn to provide the comparison key of the items of a channel, with this function MsgMultiplexer has an algorithm to group the processed messages related to the same source into a SortedMap.
+<a href="./concurrency/msg-multiplexer.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MsgMultiplexer&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> The default implementation MsgMultiplexer allows to create complex patterns where a Broadcaster can emit an message to multiple processors (consumers) that can potentially represent multiple processing systems, do the relevant calculation and multiplex the multiple outputs into a single channel for simplified consumption. Its main function is to Mulitplex a set of concurrent processors that process a common initial Message converging them into one channel,where the output is a Message which Message property is a sortedmap of the output values of the processors grouped by initial Message CorrelationKey and ordered by index value of each processor. Closure of MsgMultiplexer is handle by a DoneHandler that allows to control they way a set of go routines are closed in order to prevent deadlocks and unwanted behaviour MsgMultiplexer outputs the multiplexed result in one channel using the channel bridge pattern. MsgMultiplexer default behaviour can be overridden by providing a MsgMultiplexerGetItemKeyFn to provide the comparison key of the items of a channel, with this function MsgMultiplexer has an algorithm to group the processed messages related to the same source into a SortedMap.
 
 ```go
 /*
@@ -467,18 +467,18 @@ type MsgMultiplexer struct {
 ```go
 //MsgMultiplexer sample
 
-dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(1 * time.Millisecond))
+dm := NewDoneManager(DoneManagerWithDelay(1 * time.Millisecond))
 defer dm.GetDoneFunc()()
 dh := dm.AddNewDoneHandler(0)
 dh1 := dm.AddNewDoneHandler(1)
 dh2 := dm.AddNewDoneHandler(2)
 //Create caster
-b := concurrency.NewBCaster(dh,
+b := NewBCaster(dh,
     "string",
 )
 //Create Multiplexer
-mp := concurrency.NewMsgMultiplexer(dh2,
-    b.MsgType, concurrency.MsgMultiplexerIndex(1),
+mp := NewMsgMultiplexer(dh2,
+    b.MsgType, MsgMultiplexerIndex(1),
 )
 defer func() {
     dm.GetDoneFunc()()

@@ -13,7 +13,7 @@ type MsgMultiplexerOption func(*MsgMultiplexer)
 // MsgMultiplexer - The default implementation MsgMultiplexer allows to create complex patterns where a Broadcaster can emit an message to multiple processors (consumers)
 // that can potentially represent multiple processing systems, do the relevant calculation and multiplex the multiple outputs
 // into a single channel for simplified consumption.
-// Its main function is to Mulitplex a set of parallel processors that process a common initial concurrency.Message
+// Its main function is to Mulitplex a set of concurrent processors that process a common initial concurrency.Message
 // converging them into one channel,where the output is a concurrency.Message which Message property is a sortedmap of the output
 // values of the processors grouped by initial concurrency.Message CorrelationKey and ordered by index value of each processor.
 // Closure of MsgMultiplexer is handle by a concurrency.DoneHandler that allows to control they way a set of go routines
