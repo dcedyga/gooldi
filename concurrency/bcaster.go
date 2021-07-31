@@ -13,9 +13,10 @@ type BCasterOption func(*BCaster)
 // BCaster - Is a broadcaster that allows to send messages of different types to registered listeners using
 // go concurrency patterns. Listeners are chan interfaces{} allowing for go concurrent communication.
 // Closure of BCaster is handle by a concurrency.DoneHandler that allows to control they way a set of go routines
-// are closed in order to prevent deadlocks and unwanted behaviour
+// are closed in order to prevent deadlocks and unwanted behaviour.
 // It detects when listeners are done and performs the required cleanup to ensure that messages are sent to the
 // active listeners.
+
 type BCaster struct {
 	id           string
 	listeners    *SortedMap
@@ -27,7 +28,8 @@ type BCaster struct {
 	transformFn  func(b *BCaster, input interface{}) interface{}
 }
 
-// NewBCaster - Constructor
+// NewBCaster - Constructor which gets a doneHandler and a msgType and retrieves a BCaster pointer.
+// It also allows to inject BCasterTransformFn as an option
 func NewBCaster(dh *DoneHandler, msgType string, opts ...BCasterOption) *BCaster {
 	id := uuid.NewV4().String()
 	b := &BCaster{
@@ -53,7 +55,7 @@ func (b *BCaster) ID() string {
 }
 
 // BCasterTransformFn - option to add a function to transform the output into
-// the desired output structure to the BCaster
+// the desired output structure of the BCaster
 func BCasterTransformFn(fn func(b *BCaster, input interface{}) interface{}) BCasterOption {
 	return func(b *BCaster) {
 		b.transformFn = fn
@@ -97,10 +99,8 @@ func (b *BCaster) RemoveListener(listenerCh chan interface{}) {
 
 // Broadcast - Broadcast a message to all the active registered listeners. It uses
 // a transform function to map the input message to a desired output.
-// When using BCasterMessagePairTransformFn as the broadcaster transform function,
-// it transforms a message into a concurrency.MessagePair
-// and broadcasts it to all the active registered listeners. The default transform function
-// just returns the input message to be broadcasted.
+// The default transform function just returns the input message to be broadcasted
+// to all the active registered listeners.
 func (b *BCaster) Broadcast(msg interface{}) {
 
 	closed := b.getClosed()
@@ -190,7 +190,8 @@ func (b *BCaster) listenersToSlice() []interface{} {
 Plug and Play and Transformation functions
 *******************************************************************************/
 
-// defaultBCasterTransformFn - Gets the bcaster, input and outputs the input
+// defaultBCasterTransformFn - Gets the bcaster input and outputs the input
+// without any variation.
 func defaultBCasterTransformFn(b *BCaster, input interface{}) interface{} {
 	return input
 }

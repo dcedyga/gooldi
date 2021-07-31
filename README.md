@@ -170,8 +170,10 @@ time.Sleep(1000 * time.Millisecond)
 The foundation of <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi's&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> stream processing is based on the following concepts. We have:
 - <a href="./concurrency/message.go#L15"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Message&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> and <a href="./concurrency/message.go#L43"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MessagePair&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> entities that are shared across the pipeline and acts as the interchangeable entity within the flow of the process. These entities are the representation of the Stream as a Stream of Messages or MessagePairs. 
 - <a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> is a broadcaster that allows to broadcast any type of message to its listeners. You can register a listener with the `AddListener`method that returns a channel of type interface{}. <a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> uses a transformation function, that is highly customizable (you can use your own), to map the input message to an output structure. the default transform function called `defaultBCasterTransformFn` Gets the bcaster, input and outputs the input with no changes. A register listener can be removed from the collection of listeners by using the `RemoveListener` method.
-- 
-
+- <a href="./concurrency/processor.go#L12"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Processor&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a>
+- <a href="./concurrency/filter.go#L12"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Filter&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a>
+- <a href="./concurrency/msg-multiplexer.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=MsgMultiplexer&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a>
+- <a href="./concurrency/multi-msg-multiplexer.go#L14"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=160&section=header&text=MultiMsgMultiplexer&fontSize=75&animation=fadeIn&fontAlignY=55" width="125" height="23"/></a>
 #### *1. Message and MessagePair*
 
 ```go
@@ -274,11 +276,84 @@ go func() {
 
 }()
 ```
-#### *3. Processor and Filter*
+#### *3. Processor*
+<a href="./concurrency/processor.go#L12"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Processor&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> Unit that listen to an input channel (inputChan) and process work. Closing the inputChan channel needs to be managed outside the Processor using a DoneHandler It has a DoneHandler to manage the lifecycle of the processor, an index to determine the order in which the processor output results might be stored in a multiplexed pattern, an id of the processor, the name of the processor, the state of the processor and an output channel that emits the processed results for consumption.
 
-#### *4. MsgMultiplexer*
+```go
+/*
+Processor
+*/
+type Processor struct {
+	Name          string
+	doneHandler   *DoneHandler
+	inputChan     chan interface{}
+	index         int64
+	id            string
+	outputChannel chan interface{}
+	lock          *sync.RWMutex
+	state         State
+	transformFn   func(p *Processor, input interface{}, result interface{}) interface{}
+}
+```
+* **NewProcessor** - Constructor
+* **ProcessorTransformFn** - option to add a function to transform the output into the desired output structure to the Processor
+* **ProcessorWithIndex** - option to add a index value to the processor to define its order of execution
+* **ProcessorWithInputChannel** - option to add an inputchannel to the processor
+* **ID** - retrieves the Id of the Processor
+* **Index** - retrieves the Index of the Processor
+* **InputChannel** - retrieves the InputChannel of the Processor
+* **OutputChannel** - retrieves the OutputChannel of the Processor
+* **Process** - When the processor is in Processing state processes a defined function. When the Processor is in stop state the processor will still consume messages from the input channel but it will produce a nil output as no process will be involved.
+* **Stop** - stops the processor.
+* **Start** - starts the processor.
+* **GetState** - retrieves the state of the Processor
+* **HasValidInputChan** - checks if the input channel is valid and not nil.
+* **ProcessorMessagePairTransformFn** - Gets the processor, input Message and output message and returns the processed output in the form of an MessagePair
+* **defaultProcessorTransformFn** - Gets the processor, input and result and outputs the result
+```go
+//Processor sample
+```
+#### *4. Filter*
+<a href="./concurrency/filter.go#L12"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Filter&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> Unit that listen to an input channel (inputChan) and filter work. Closing the inputChan channel needs to be managed outside the Filter using a DoneHandler. It has a DoneHandler to manage the lifecycle of the filter, an index to determine the order in which the filter might be run, an id of the filter, the name of the filter, the state of the filter and an output channel that emits the processed results for consumption.
 
-#### *5. MultiMsgMultiplexer*
+```go
+/*
+Filter
+*/
+type Filter struct {
+	Name          string
+	doneHandler   *DoneHandler
+	inputChan     chan interface{}
+	index      	  int64
+	id            string
+	outputChannel chan interface{}
+	lock          *sync.RWMutex
+	transformFn   func(f *Filter, input interface{}) interface{}
+	state         State
+}
+```
+* **NewFilter** - Constructor
+* **FilterWithIndex** - option to add a index value to the filter to define its order of execution
+* **FilterWithInputChannel** - option to add an inputchannel to the filter
+* **FilterTransformFn** - option to add a function to transform the output into the desired output structure to the Filter
+* **ID** - retrieves the Id of the Filter
+* **Index** - retrieves the Index of the Filter
+* **InputChannel** - retrieves the InputChannel of the Filter
+* **OutputChannel** - retrieves the OutputChannel of the Filter
+* **Filter** - When the filter is in Processing state filters a defined function. When the Filter is in stop state the filter will still consume messages from the input channel and it will output the input Message as no filter will be involved.
+* **Stop** - stops the filter.
+* **Start** - starts the filter.
+* **GetState** - retrieves the state of the Filter
+* **HasValidInputChan** - checks if the input channel is valid and not nil.
+* **defaultFilterTransformFn** - Gets the filter and input outputs the input with the filter index, if the input has the Index property
+
+```go
+//Filter sample
+
+```
+#### *5. MsgMultiplexer*
+
+#### *6. MultiMsgMultiplexer*
 
 ## gooldi: Deterministic and Non-Deterministic Stream Processing
 ## gooldi:Highly customizable

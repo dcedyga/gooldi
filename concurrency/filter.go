@@ -3,6 +3,7 @@ package concurrency
 import (
 	"fmt"
 	"sync"
+
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -19,7 +20,7 @@ type Filter struct {
 	Name          string
 	doneHandler   *DoneHandler
 	inputChan     chan interface{}
-	index      	  int64
+	index         int64
 	id            string
 	outputChannel chan interface{}
 	lock          *sync.RWMutex
@@ -36,7 +37,7 @@ func NewFilter(name string, dh *DoneHandler, opts ...FilterOption) *Filter {
 		Name:          name,
 		inputChan:     nil,
 		outputChannel: make(chan interface{}),
-		index:      0,
+		index:         0,
 		state:         Init,
 		lock:          &sync.RWMutex{},
 	}
@@ -56,7 +57,7 @@ func (f *Filter) doneRn() {
 	}
 }
 
-// FilterWithSequence - option to add a index value to the filter to define its order of execution
+// FilterWithIndex - option to add a index value to the filter to define its order of execution
 func FilterWithIndex(idx int64) FilterOption {
 	return func(f *Filter) {
 		f.index = idx
@@ -83,7 +84,7 @@ func (f *Filter) ID() string {
 	return f.id
 }
 
-// Sequence - retrieves the Index of the Filter
+// Index - retrieves the Index of the Filter
 func (f *Filter) Index() interface{} {
 	return f.index
 }
@@ -180,14 +181,14 @@ func (f *Filter) close() {
 }
 
 /******************************************************************************
-Plug and Play and Transformation functions 
+Plug and Play and Transformation functions
 *******************************************************************************/
 
-// defaultFilterTransformFn - Gets the filter and input outputs the input with the 
+// defaultFilterTransformFn - Gets the filter and input outputs the input with the
 // filter index, if the input has the Index property
 func defaultFilterTransformFn(f *Filter, input interface{}) interface{} {
-	if (HasField(input,"Index")){
-		SetFieldInt64Val("Index",input,f.index)
+	if HasField(input, "Index") {
+		SetFieldInt64Val("Index", input, f.index)
 	}
 	return input
 }

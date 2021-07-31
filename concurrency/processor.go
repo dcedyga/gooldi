@@ -83,7 +83,7 @@ func (p *Processor) ID() string {
 	return p.id
 }
 
-// Sequence - retrieves the Sequence of the Processor
+// Index - retrieves the Index of the Processor
 func (p *Processor) Index() int64 {
 	return p.index
 }
