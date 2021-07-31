@@ -138,9 +138,9 @@ func (mp *MsgMultiplexer) Get(key interface{}) (chan interface{}, bool) {
 	return v.(chan interface{}), true
 }
 
-// delete - Deletes a registered channel from the MsgMultiplexer map of inputChannels
+// Delete - Deletes a registered channel from the MsgMultiplexer map of inputChannels
 // and logs the length of the remaining registered channels map.
-func (mp *MsgMultiplexer) delete(key interface{}) {
+func (mp *MsgMultiplexer) Delete(key interface{}) {
 	mp.lock.Lock()
 	defer mp.lock.Unlock()
 	mp.inputChannels.Delete(key)
@@ -159,7 +159,7 @@ func (mp *MsgMultiplexer) processChannel(key interface{}, value chan interface{}
 			mp.sendWhenReady(cKey)
 		}
 	}
-	mp.delete(key)
+	mp.Delete(key)
 }
 
 //storeInPreStreamMap - store stream item in PreStreamMap per correlationKey
