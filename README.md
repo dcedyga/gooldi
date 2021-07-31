@@ -457,7 +457,7 @@ type MsgMultiplexer struct {
 * **Index** - retrieves the Index of the MsgMultiplexer
 * **Set** - Registers a channel in the MsgMultiplexer, starts processing it and logs the length of the registered channels map.
 * **Get** - Retrieves a channel reqistered in the MsgMultiplexer by key
-* **Delete** Deletes a registered channel from the MsgMultiplexer map of inputChannels and logs the length of the remaining registered channels map.
+* **Delete** - Deletes a registered channel from the MsgMultiplexer map of inputChannels and logs the length of the remaining registered channels map.
 * **Iter** - iterates over the items in the Multiplexer. Each item is sent over a channel, so that we can iterate over the it using the builtin range keyword
 * **PrintPreStreamMap** - prints the preStreamMap
 * **defaultGetItemKeyFn** - Gets the key value used by the comparator in order to group the Messages in the SortedMap. Can be overridden for a more generic implementation that is not Message Oriented
