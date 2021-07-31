@@ -227,7 +227,7 @@ NewMessage(fmt.Sprintf("This is message 1"),
 ```
 #### *2. BCaster*
 
-<a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> Is a broadcaster that allows to send messages of different types to registered listeners using go concurrency patterns. Listeners are chan interfaces{} allowing for go concurrent communication. Closure of BCaster is handle by a concurrency.DoneHandler that allows to control they way a set of go routines are closed in order to prevent deadlocks and unwanted behaviour It detects when listeners are done and performs the required cleanup to ensure that messages are sent to the active listeners.
+<a href="./concurrency/bcaster.go#L13"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=BCaster&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> Is a broadcaster that allows to send messages of different types to registered listeners using go concurrency patterns. Listeners are chan interfaces{} allowing for go concurrent communication. Closure of BCaster is handle by a DoneHandler that allows to control they way a set of go routines are closed in order to prevent deadlocks and unwanted behaviour It detects when listeners are done and performs the required cleanup to ensure that messages are sent to the active listeners.
 
 ```go
 /*
@@ -257,16 +257,16 @@ It has the following methods:
 
 ```go
 //BCaster sample
-dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(50 * time.Millisecond))
+dm := NewDoneManager(DoneManagerWithDelay(50 * time.Millisecond))
 dh := dm.AddNewDoneHandler(0)
 //Create caster
-b := concurrency.NewBCaster(dh,
+b := NewBCaster(dh,
     "string",
 )
 //...
 go func() {
     for msgId := 0; msgId < 30; msgId++ {
-        e := concurrency.NewMessage(
+        e := NewMessage(
             msgId,
             b.MsgType,
         )
@@ -276,6 +276,9 @@ go func() {
 
 }()
 ```
+
+More code samples in:
+<a href="./concurrency_test/base_test.go">Base Test</a> and <a href="./concurrency_test/bcaster_test.go">BCaster Test</a>
 #### *3. Processor*
 <a href="./concurrency/processor.go#L12"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Processor&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> Unit that listen to an input channel (inputChan) and process work. Closing the inputChan channel needs to be managed outside the Processor using a DoneHandler It has a DoneHandler to manage the lifecycle of the processor, an index to determine the order in which the processor output results might be stored in a multiplexed pattern, an id of the processor, the name of the processor, the state of the processor and an output channel that emits the processed results for consumption.
 
@@ -312,7 +315,42 @@ type Processor struct {
 * **defaultProcessorTransformFn** - Gets the processor, input and result and outputs the result
 ```go
 //Processor sample
+
+//The process function
+func process(pr *Processor, input interface{}, params ...interface{}) interface{} {
+	msg := input.(*Message)
+	id := params[0]
+	i := msg.Message.(int) * 2
+	return NewMessage(fmt.Sprintf("ClientId %v: multiplies by 2 -> message: %v, value: %v", id, msg.Message, i),
+		msg.MsgType,
+		MessageWithCorrelationKey(msg.CorrelationKey),
+		MessageWithIndex(pr.Index()),
+	)
+}
+
+//The Processor
+w := NewProcessor(
+    fmt.Sprintf("worker%v", 1),
+    dh1,
+    ProcessorWithIndex(int64(1)),
+    ProcessorWithInputChannel(b.AddListener(dh1)),
+)
+
+go w.Process(process, 1)
+
+// Print output
+go func() {
+    i := 0
+    for pe := range w.OutputChannel() {
+        pr := pe.Value.(*concurrency.Message)
+        fmt.Printf("CorrelationKey(%v) - Index(%v) - TimeInNano(%v) - ID(%v) - MsgType(%v) - Message: %v \n", pr.CorrelationKey, pr.Index, pr.TimeInNano, pr.ID, pr.MsgType, pr.Message)
+    }
+}()
 ```
+
+More code samples in:
+<a href="./concurrency_test/base_test.go">Base Test</a> and <a href="./concurrency_test/msg_multiplexer_patterns_test.go">Msg Multiplexer Patterns Test</a>
+
 #### *4. Filter*
 <a href="./concurrency/filter.go#L12"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=6699ff&fontColor=ffffff&height=200&section=header&text=Filter&fontSize=100&animation=fadeIn&fontAlignY=55" width="100" height="23"/></a> Unit that listen to an input channel (inputChan) and filter work. Closing the inputChan channel needs to be managed outside the Filter using a DoneHandler. It has a DoneHandler to manage the lifecycle of the filter, an index to determine the order in which the filter might be run, an id of the filter, the name of the filter, the state of the filter and an output channel that emits the processed results for consumption.
 
@@ -350,7 +388,43 @@ type Filter struct {
 ```go
 //Filter sample
 
+//The filter function
+func filterFn(f *concurrency.Filter, input interface{}, params ...interface{}) bool {
+	msg := input.(*concurrency.MessagePair)
+	i := msg.In.Message.(int) % 2
+	return i == 0
+}
+// The Filter
+filter := concurrency.NewFilter(
+    fmt.Sprintf("filter%v", 5),
+    dh1,
+    concurrency.FilterWithIndex(5),
+    concurrency.FilterWithInputChannel(mp.Iter()),
+)
+go filter.Filter(filterFn)
+
+// Print output
+go func() {
+    i := 0
+    for v := range filter.OutputChannel() {
+        _ = v
+        item := v.(*concurrency.MessagePair)
+        s := item.Out.Message.(*concurrency.SortedMap)
+        fmt.Printf("-------\n")
+        for pe := range s.Iter() {
+            pr := pe.Value.(*concurrency.MessagePair).Out
+            fmt.Printf("CorrelationKey(%v) - Index(%v) - TimeInNano(%v) - ID(%v) - MsgType(%v) - Message: %v \n", pr.CorrelationKey, pr.Index, pr.TimeInNano, pr.ID, pr.MsgType, pr.Message)
+        }
+        i++
+    }
+    fmt.Printf("Total Messages Filtered: %v,\n", i)
+}()
+
 ```
+
+More code samples in:
+<a href="./concurrency_test/base_test.go">Base Test</a> and <a href="./concurrency_test/msg_multiplexer_patterns_test.go">Msg Multiplexer Patterns Test</a>
+
 #### *5. MsgMultiplexer*
 
 #### *6. MultiMsgMultiplexer*
