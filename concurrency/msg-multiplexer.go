@@ -17,11 +17,13 @@ type MsgMultiplexerOption func(*MsgMultiplexer)
 // converging them into one channel,where the output is a concurrency.Message which Message property is a sortedmap of the output
 // values of the processors grouped by initial concurrency.Message CorrelationKey and ordered by index value of each processor.
 // Closure of MsgMultiplexer is handle by a concurrency.DoneHandler that allows to control they way a set of go routines
-// are closed in order to prevent deadlocks and unwanted behaviour
+// are closed in order to prevent deadlocks and unwanted behaviour.
 // MsgMultiplexer outputs the multiplexed result in one channel using the channel bridge pattern.
 // MsgMultiplexer default behaviour can be overridden by providing a MsgMultiplexerGetItemKeyFn to provide the comparison key of
 // the items of a channel, with this function MsgMultiplexer
 // has an algorithm to group the processed messages related to the same source into a SortedMap.
+// A transformFn can be provided as well to map the output of the MsgMultiplexer to a specific structure. The defaultTransformFn
+// transform the SortedMap of processor outputs into a Message which Message property is populated with this SortedMap
 
 type MsgMultiplexer struct {
 	id                      string
