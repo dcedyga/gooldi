@@ -83,7 +83,7 @@ func customProcessTransformFn(p *concurrency.Processor, input interface{}, resul
 	return e
 }
 
-func (suite *Suite) Test05MsgMultiplexer01CustomMsg() {
+func (suite *Suite) Test06MsgMultiplexer01CustomMsg() {
 	dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(1 * time.Millisecond))
 	defer dm.GetDoneFunc()()
 	dh := dm.AddNewDoneHandler(0)

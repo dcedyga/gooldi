@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (suite *Suite) Test06MultiMsgMultiplexer01WaitForAll() {
+func (suite *Suite) Test07MultiMsgMultiplexer01WaitForAll() {
 	dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(3 * time.Millisecond))
 	defer dm.GetDoneFunc()()
 	dh := dm.AddNewDoneHandler(0)
@@ -31,16 +31,25 @@ func (suite *Suite) Test06MultiMsgMultiplexer01WaitForAll() {
 	)
 
 	//Create Multiplexer
-	mp := concurrency.NewMultiMsgMultiplexer(dh3, "MultiMsg", concurrency.MultiMsgMultiplexerWaitForAll(true), concurrency.MultiMsgMultiplexerIndex(1))
+	mp := concurrency.NewMultiMsgMultiplexer(dh3,
+		"MultiMsg",
+		concurrency.MultiMsgMultiplexerWaitForAll(true),
+		concurrency.MultiMsgMultiplexerIndex(1),
+		concurrency.MultiMsgMultiplexerItemKeyFn(multiMsgGetItemKey),
+		concurrency.MultiMsgMultiplexerTransformFn(multiMsgTransformFn),
+	)
 
-	mp.Start()
 	//Create Processors
 
 	mp.Set(b1.MsgType, b1.AddListener(dh))
 	mp.Set(b2.MsgType, b2.AddListener(dh1))
 	mp.Set(b3.MsgType, b3.AddListener(dh2))
 
-	time.Sleep(300 * time.Microsecond)
+	fmt.Printf("multiMsgMultiplexer - ID:%v, Index: %v\n", mp.ID(), mp.Index())
+	bc, _ := mp.Get("bcaster1")
+	fmt.Printf("multiMsgMultiplexer.bcaster1:%v\n", bc)
+
+	//time.Sleep(300 * time.Microsecond)
 	// Get all multiplexed messages
 
 	go func() {
@@ -71,43 +80,77 @@ func (suite *Suite) Test06MultiMsgMultiplexer01WaitForAll() {
 
 	//wd, _ := mp.Get(1)
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 30; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b1", msgId),
-				b1.MsgType,
-			)
-			b1.Broadcast(e)
+			select {
+			case <-dh.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b1", msgId),
+					b3.MsgType,
+				)
+				b1.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
 			time.Sleep(500 * time.Microsecond)
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster1: %v,\n", i)
 	}()
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 30; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b2", msgId),
-				b2.MsgType,
-			)
-			b2.Broadcast(e)
-			time.Sleep(1 * time.Millisecond)
+			select {
+			case <-dh1.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b2", msgId),
+					b3.MsgType,
+				)
+				b2.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
+			time.Sleep(1000 * time.Microsecond)
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster2: %v,\n", i)
 	}()
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 30; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b3", msgId),
-				b3.MsgType,
-			)
-			b3.Broadcast(e)
+
+			select {
+			case <-dh2.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b3", msgId),
+					b3.MsgType,
+				)
+				b3.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
 			time.Sleep(500 * time.Microsecond)
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster3: %v,\n", i)
 	}()
 	time.Sleep(1000 * time.Millisecond)
 
 }
 
-func (suite *Suite) Test06MultiMsgMultiplexer02WaitForAllBuffer() {
+func (suite *Suite) Test07MultiMsgMultiplexer02WaitForAllBuffer() {
 	dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(1 * time.Millisecond))
 	defer dm.GetDoneFunc()()
 	dh := dm.AddNewDoneHandler(0)
@@ -132,14 +175,13 @@ func (suite *Suite) Test06MultiMsgMultiplexer02WaitForAllBuffer() {
 	//Create Multiplexer
 	mp := concurrency.NewMultiMsgMultiplexer(dh3, "MultiMsg", concurrency.MultiMsgMultiplexerBufferSize(2), concurrency.MultiMsgMultiplexerIndex(1))
 
-	mp.Start()
 	//Create Processors
 
 	mp.Set(b1.MsgType, b1.AddListener(dh))
 	mp.Set(b2.MsgType, b2.AddListener(dh1))
 	mp.Set(b3.MsgType, b3.AddListener(dh2))
 
-	time.Sleep(300 * time.Microsecond)
+	//time.Sleep(300 * time.Microsecond)
 	// Get all multiplexed messages
 
 	go func() {
@@ -171,43 +213,77 @@ func (suite *Suite) Test06MultiMsgMultiplexer02WaitForAllBuffer() {
 
 	//wd, _ := mp.Get(1)
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 30; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b1", msgId),
-				b1.MsgType,
-			)
-			b1.Broadcast(e)
+			select {
+			case <-dh.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b1", msgId),
+					b3.MsgType,
+				)
+				b1.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
 			time.Sleep(500 * time.Microsecond)
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster1: %v,\n", i)
 	}()
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 30; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b2", msgId),
-				b2.MsgType,
-			)
-			b2.Broadcast(e)
-			time.Sleep(1 * time.Millisecond)
+			select {
+			case <-dh1.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b2", msgId),
+					b3.MsgType,
+				)
+				b2.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
+			time.Sleep(1000 * time.Microsecond)
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster2: %v,\n", i)
 	}()
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 30; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b3", msgId),
-				b3.MsgType,
-			)
-			b3.Broadcast(e)
+
+			select {
+			case <-dh2.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b3", msgId),
+					b3.MsgType,
+				)
+				b3.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
 			time.Sleep(500 * time.Microsecond)
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster3: %v,\n", i)
 	}()
 
 	time.Sleep(1000 * time.Millisecond)
 
 }
-func (suite *Suite) Test06MultiMsgMultiplexer03WaitForAllBM() {
+func (suite *Suite) Test07MultiMsgMultiplexer03WaitForAllBM() {
 	dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(1 * time.Millisecond))
 	defer dm.GetDoneFunc()()
 	dh := dm.AddNewDoneHandler(0)
@@ -228,73 +304,96 @@ func (suite *Suite) Test06MultiMsgMultiplexer03WaitForAllBM() {
 		"bcaster3",
 		//concurrency.BCasterTransformFn(concurrency.BCasterEventTransformFn),
 	)
-
 	//Create Multiplexer
 	mp := concurrency.NewMultiMsgMultiplexer(dh3, "MultiMsg", concurrency.MultiMsgMultiplexerWaitForAll(true), concurrency.MultiMsgMultiplexerIndex(1))
 
-	mp.Start()
 	//Create Processors
 
 	mp.Set(b1.MsgType, b1.AddListener(dh))
 	mp.Set(b2.MsgType, b2.AddListener(dh1))
 	mp.Set(b3.MsgType, b3.AddListener(dh2))
 
-	time.Sleep(300 * time.Microsecond)
+	//time.Sleep(300 * time.Microsecond)
 	// Get all multiplexed messages
 
-	go func() {
-		i := 0
-		for v := range mp.Iter() {
-			_ = v
-
-			i++
-
-		}
-		fmt.Printf("Total Messages Extracted: %v,\n", i)
-	}()
+	printMultMsgMultiplexedResult(mp)
 
 	// Broadcast Messages
 
 	//wd, _ := mp.Get(1)
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 300000; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b1", msgId),
-				b1.MsgType,
-			)
-			b1.Broadcast(e)
+			select {
+			case <-dh.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b1", msgId),
+					b3.MsgType,
+				)
+				b1.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
 
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster1: %v,\n", i)
 	}()
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 300000; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b2", msgId),
-				b2.MsgType,
-			)
-			b2.Broadcast(e)
+			select {
+			case <-dh1.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b2", msgId),
+					b3.MsgType,
+				)
+				b2.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
 
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster2: %v,\n", i)
 	}()
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 300000; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b3", msgId),
-				b3.MsgType,
-			)
-			b3.Broadcast(e)
+
+			select {
+			case <-dh2.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b3", msgId),
+					b3.MsgType,
+				)
+				b3.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
 
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster3: %v,\n", i)
 	}()
 
 	time.Sleep(1000 * time.Millisecond)
 
 }
 
-func (suite *Suite) Test06MultiMsgMultiplexer04WaitForAllWithTimer() {
+func (suite *Suite) Test07MultiMsgMultiplexer04WaitForAllWithTimer() {
 	dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(1 * time.Millisecond))
 	defer dm.GetDoneFunc()()
 	dh := dm.AddNewDoneHandler(0)
@@ -325,14 +424,13 @@ func (suite *Suite) Test06MultiMsgMultiplexer04WaitForAllWithTimer() {
 		concurrency.MultiMsgMultiplexerSendPeriod(&d),
 	)
 
-	mp.Start()
 	//Create Processors
 
 	mp.Set(b1.MsgType, b1.AddListener(dh))
 	mp.Set(b2.MsgType, b2.AddListener(dh1))
 	mp.Set(b3.MsgType, b3.AddListener(dh2))
 
-	time.Sleep(300 * time.Microsecond)
+	//time.Sleep(300 * time.Microsecond)
 	// Get all multiplexed messages
 
 	go func() {
@@ -363,43 +461,77 @@ func (suite *Suite) Test06MultiMsgMultiplexer04WaitForAllWithTimer() {
 
 	//wd, _ := mp.Get(1)
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 300; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b1", msgId),
-				b1.MsgType,
-			)
-			b1.Broadcast(e)
+			select {
+			case <-dh.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b1", msgId),
+					b3.MsgType,
+				)
+				b1.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
 			time.Sleep(500 * time.Microsecond)
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster1: %v,\n", i)
 	}()
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 300; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b2", msgId),
-				b2.MsgType,
-			)
-			b2.Broadcast(e)
-			time.Sleep(1 * time.Millisecond)
+			select {
+			case <-dh1.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b2", msgId),
+					b3.MsgType,
+				)
+				b2.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
+			time.Sleep(1000 * time.Microsecond)
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster2: %v,\n", i)
 	}()
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 300; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b3", msgId),
-				b3.MsgType,
-			)
-			b3.Broadcast(e)
+
+			select {
+			case <-dh2.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b3", msgId),
+					b3.MsgType,
+				)
+				b3.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
 			time.Sleep(500 * time.Microsecond)
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster3: %v,\n", i)
 	}()
 	time.Sleep(1000 * time.Millisecond)
 
 }
 
-func (suite *Suite) Test06MultiMsgMultiplexer05WaitForAllWithTimerBM() {
+func (suite *Suite) Test07MultiMsgMultiplexer05WaitForAllWithTimerBM() {
 	dm := concurrency.NewDoneManager(concurrency.DoneManagerWithDelay(1 * time.Millisecond))
 	defer dm.GetDoneFunc()()
 	dh := dm.AddNewDoneHandler(0)
@@ -430,62 +562,85 @@ func (suite *Suite) Test06MultiMsgMultiplexer05WaitForAllWithTimerBM() {
 		concurrency.MultiMsgMultiplexerSendPeriod(&d),
 	)
 
-	mp.Start()
 	//Create Processors
 
 	mp.Set(b1.MsgType, b1.AddListener(dh))
 	mp.Set(b2.MsgType, b2.AddListener(dh1))
 	mp.Set(b3.MsgType, b3.AddListener(dh2))
 
-	time.Sleep(300 * time.Microsecond)
+	//time.Sleep(300 * time.Microsecond)
 	// Get all multiplexed messages
 
-	go func() {
-		i := 0
-		for v := range mp.Iter() {
-			_ = v
-
-			i++
-
-		}
-		fmt.Printf("Total Messages Extracted: %v,\n", i)
-	}()
-
+	printMultMsgMultiplexedResult(mp)
 	// Broadcast Messages
 
 	//wd, _ := mp.Get(1)
 	go func() {
-		for msgId := 0; msgId < 300000; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b1", msgId),
-				b1.MsgType,
-			)
-			b1.Broadcast(e)
+		i := 0
+		exit := false
+		for msgId := 0; msgId < 500000; msgId++ {
+			select {
+			case <-dh.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b1", msgId),
+					b3.MsgType,
+				)
+				b1.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
 
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster1: %v,\n", i)
 	}()
 	go func() {
-		for msgId := 0; msgId < 300000; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b2", msgId),
-				b2.MsgType,
-			)
-			b2.Broadcast(e)
+		i := 0
+		exit := false
+		for msgId := 0; msgId < 500000; msgId++ {
+			select {
+			case <-dh1.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b2", msgId),
+					b3.MsgType,
+				)
+				b2.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
 
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster2: %v,\n", i)
 	}()
 	go func() {
-		for msgId := 0; msgId < 300000; msgId++ {
-			e := concurrency.NewMessage(
-				fmt.Sprintf("%v From b3", msgId),
-				b3.MsgType,
-			)
-			b3.Broadcast(e)
+		i := 0
+		exit := false
+		for msgId := 0; msgId < 500000; msgId++ {
+
+			select {
+			case <-dh2.Done():
+				exit = true
+			default:
+				e := concurrency.NewMessage(
+					fmt.Sprintf("%v From b3", msgId),
+					b3.MsgType,
+				)
+				b3.Broadcast(e)
+				i++
+			}
+			if exit {
+				break
+			}
 
 		}
-
+		fmt.Printf("Total Messages Broadcasted - bcaster3: %v,\n", i)
 	}()
 	time.Sleep(1000 * time.Millisecond)
 

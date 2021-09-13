@@ -21,6 +21,7 @@ type Filter struct {
 	doneHandler   *DoneHandler
 	inputChan     chan interface{}
 	index         int64
+	toStringIndex string
 	id            string
 	outputChannel chan interface{}
 	lock          *sync.RWMutex
@@ -38,6 +39,7 @@ func NewFilter(name string, dh *DoneHandler, opts ...FilterOption) *Filter {
 		inputChan:     nil,
 		outputChannel: make(chan interface{}),
 		index:         0,
+		toStringIndex: "00000000000000000000",
 		state:         Init,
 		lock:          &sync.RWMutex{},
 	}
@@ -61,6 +63,7 @@ func (f *Filter) doneRn() {
 func FilterWithIndex(idx int64) FilterOption {
 	return func(f *Filter) {
 		f.index = idx
+		f.toStringIndex = IndexToString(idx)
 	}
 }
 
@@ -89,6 +92,16 @@ func (f *Filter) Index() interface{} {
 	return f.index
 }
 
+// DoneHandler - retrieves the DoneHandler of the Filter
+func (f *Filter) DoneHandler() *DoneHandler {
+	return f.doneHandler
+}
+
+// ToStringIndex - retrieves the ToStringIndex representation of the Filter
+func (f *Filter) ToStringIndex() string {
+	return f.toStringIndex
+}
+
 // InputChannel - retrieves the InputChannel of the Filter
 func (f *Filter) InputChannel() chan interface{} {
 	return f.inputChan
@@ -104,30 +117,30 @@ func (f *Filter) OutputChannel() chan interface{} {
 // output the input Message as no filter will be involved.
 func (f *Filter) Filter(fn func(f *Filter, input interface{}, params ...interface{}) bool, params ...interface{}) {
 	f.setState(Processing)
-	drain := false
+	//drain := false
 	for input := range f.inputChan {
 		result := true
 		if f.GetState() == Processing {
 			result = fn(f, input, params...)
 		}
 		if result {
-			r := f.transformFn(f, input)
-			nextItem := false
-		loop:
-			for !nextItem && !drain {
-				select {
-				case <-f.doneHandler.Done():
-					nextItem = true
-					drain = true
-					continue loop
-				default:
-					select {
-					case f.outputChannel <- r:
-						nextItem = true
-						continue loop
-					}
-				}
-			}
+			f.outputChannel <- f.transformFn(f, input)
+			// 	nextItem := false
+			// loop:
+			// 	for !nextItem && !drain {
+			// 		select {
+			// 		case <-f.doneHandler.Done():
+			// 			nextItem = true
+			// 			drain = true
+			// 			continue loop
+			// 		default:
+			// 			select {
+			// 			case f.outputChannel <- r:
+			// 				nextItem = true
+			// 				continue loop
+			// 			}
+			// 		}
+			// 	}
 		}
 	}
 	CloseChannel(f.outputChannel)
@@ -137,7 +150,7 @@ func (f *Filter) Filter(fn func(f *Filter, input interface{}, params ...interfac
 func (f *Filter) Stop() {
 	f.lock.Lock()
 	f.state = Stopped
-	f.inputChan = nil
+	//f.inputChan = nil
 	f.lock.Unlock()
 
 }
@@ -180,6 +193,12 @@ func (f *Filter) close() {
 
 }
 
+func (f *Filter) String() string {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	return "Index: " + f.toStringIndex + "ID: " + f.ID()
+}
+
 /******************************************************************************
 Plug and Play and Transformation functions
 *******************************************************************************/
@@ -187,8 +206,5 @@ Plug and Play and Transformation functions
 // defaultFilterTransformFn - Gets the filter and input outputs the input with the
 // filter index, if the input has the Index property
 func defaultFilterTransformFn(f *Filter, input interface{}) interface{} {
-	if HasField(input, "Index") {
-		SetFieldInt64Val("Index", input, f.index)
-	}
 	return input
 }

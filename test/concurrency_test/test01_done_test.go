@@ -326,3 +326,59 @@ func (suite *Suite) Test01Done09DoneManagerGetDoneHandler() {
 	dm.GetDoneFunc()()
 	time.Sleep(1000 * time.Millisecond)
 }
+
+func (suite *Suite) Test01Done10DoneManagerWithDeadlineAndDoneHandlerDeadline() {
+
+	dm := concurrency.NewDoneManager(
+		concurrency.DoneManagerWithDeadline(time.Now().Add(100 * time.Millisecond)),
+	)
+	dh := dm.AddNewDoneHandler(0)
+	dh1 := dm.AddNewDoneHandler(1, concurrency.DoneHandlerWithDeadline(time.Now().Add(10*time.Millisecond)))
+	dh2 := dm.AddNewDoneHandler(2)
+
+	fmt.Printf("DoneManager.Deadline:%v\n", dm.Deadline())
+	fmt.Printf("DoneHandler1.Deadline:%v\n", dh1.Deadline())
+	go func() {
+		for {
+			select {
+			case <-dh.Done():
+				fmt.Printf("We are done with delay and timeout - on layer 0 -> %v: %v\n", dh.ID(), dh.Err())
+				return
+			}
+		}
+	}()
+	go func() {
+		for {
+			select {
+			case <-dh1.Done():
+				fmt.Printf("We are done with delay and timeout - on layer 1 -> %v: %v\n", dh1.ID(), dh1.Err())
+				return
+			}
+		}
+	}()
+	go func() {
+		for {
+			select {
+			case <-dh2.Done():
+				fmt.Printf("We are done with delay and timeout - on layer 2 -> %v: %v\n", dh2.ID(), dh2.Err())
+				return
+			}
+		}
+	}()
+	go func() {
+		for {
+			select {
+			case <-dm.Done():
+				fmt.Printf("We are done with delay and timeout - on DoneManager -> %v: %v\n", dm.ID(), dm.Err())
+				return
+			}
+		}
+	}()
+
+	d, i, ok := dm.GetDoneHandler(concurrency.QueryDoneHandlerWithKey(dh1.ID()), concurrency.QueryDoneHandlerWithLayer(1))
+	fmt.Printf("dh:%v,i:%v,ok:%v\n", d, i, ok)
+	d, i, ok = dm.GetDoneHandler(concurrency.QueryDoneHandlerWithKey(dh1.ID()), concurrency.QueryDoneHandlerWithLayer(5))
+	fmt.Printf("dh:%v,i:%v,ok:%v\n", d, i, ok)
+
+	time.Sleep(1000 * time.Millisecond)
+}

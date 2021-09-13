@@ -2,8 +2,9 @@ package concurrency_test
 
 import (
 	"fmt"
-	concurrency "github.com/dcedyga/gooldi/concurrency"
 	"runtime"
+
+	concurrency "github.com/dcedyga/gooldi/concurrency"
 
 	"time"
 )
@@ -240,7 +241,7 @@ func (suite *Suite) Test02Patterns10Bridge() {
 			defer close(chanStream)
 			for i := 0; i < 10; i++ {
 				stream := make(chan interface{}, 1)
-				stream <- i*i
+				stream <- i * i
 				close(stream)
 				chanStream <- stream
 			}
@@ -260,4 +261,164 @@ func (suite *Suite) Test02Patterns10Bridge() {
 			}
 		}
 	}()
+}
+
+func (suite *Suite) Test02Patterns11AsChan() {
+	primes := [6]int{2, 3, 5, 7, 11, 13}
+
+	for i := range concurrency.AsChan(primes) {
+		fmt.Printf("prime:%v\n", i)
+	}
+
+}
+func (suite *Suite) Test02Patterns12Or() {
+	sig := func(after time.Duration) <-chan interface{} {
+		c := make(chan interface{})
+		go func() {
+			defer close(c)
+			time.Sleep(after)
+		}()
+		return c
+	}
+	start := time.Now()
+	<-concurrency.Or(
+		sig(2*time.Hour),
+		sig(5*time.Minute),
+		sig(1*time.Second),
+		sig(1*time.Millisecond),
+		sig(1*time.Minute),
+	)
+	fmt.Printf("done after %v", time.Since(start))
+}
+
+func (suite *Suite) Test02Patterns12OrJust2() {
+	sig := func(after time.Duration) <-chan interface{} {
+		c := make(chan interface{})
+		go func() {
+			defer close(c)
+			time.Sleep(after)
+		}()
+		return c
+	}
+	start := time.Now()
+	<-concurrency.Or(
+		sig(5*time.Minute),
+		sig(1*time.Millisecond),
+	)
+	fmt.Printf("done after %v", time.Since(start))
+}
+func giveMeNowParam(param interface{}) interface{} {
+
+	fmt.Printf("param:%v\n", param)
+	time.Sleep(100 * time.Microsecond)
+	return time.Now()
+}
+func giveMeNowParams(params ...interface{}) interface{} {
+
+	fmt.Printf("params[0]:%v,params[1]:%v\n", params[0], params[1])
+	time.Sleep(100 * time.Microsecond)
+	return time.Now()
+}
+func (suite *Suite) Test02Patterns13TakeRepeatFnParamGoRoutine() {
+	dh := concurrency.NewDoneHandler()
+	defer dh.GetDoneFunc()()
+	for j := 0; j < 5; j++ {
+		for item := range concurrency.Take(dh.Done(), concurrency.RepeatParamFn(dh.Done(), giveMeNowParam, j), 5) {
+			fmt.Printf("%v\n", item)
+		}
+	}
+	go func() {
+		for {
+			select {
+			case <-dh.Done():
+				fmt.Printf("%v\n", dh.Err())
+				return
+			}
+		}
+	}()
+}
+
+func (suite *Suite) Test02Patterns14TakeRepeatFnParamsGoRoutine() {
+	dh := concurrency.NewDoneHandler()
+	defer dh.GetDoneFunc()()
+	for j := 0; j < 5; j++ {
+		for item := range concurrency.Take(dh.Done(), concurrency.RepeatParamsFn(dh.Done(), giveMeNowParams, j, j*j), 5) {
+			fmt.Printf("%v\n", item)
+		}
+	}
+	go func() {
+		for {
+			select {
+			case <-dh.Done():
+				fmt.Printf("%v\n", dh.Err())
+				return
+			}
+		}
+	}()
+}
+func doneFn() {
+	fmt.Printf("Before ending: from doneFn\n")
+
+}
+func doneParamsFn(params ...interface{}) {
+	for _, p := range params {
+		fmt.Printf("Before ending - from doneParamsFn, param: %v \n", p)
+	}
+}
+func doneChanParamFn(param chan interface{}) {
+	for p := range param {
+		fmt.Printf("Before ending - from doneParamsFn, param: %v \n", p)
+	}
+}
+func doneChanParamsFn(params ...chan interface{}) {
+	for _, p := range params {
+		go func(c chan interface{}) {
+			for i := range c {
+				fmt.Printf("Before ending - from doneParamsFn, param: %v \n", i)
+			}
+		}(p)
+	}
+}
+func (suite *Suite) Test02Patterns15OrDoneFn() {
+	dh := concurrency.NewDoneHandler()
+	defer dh.GetDoneFunc()()
+	c := concurrency.OrDoneFn(dh.Done(), make(chan interface{}), doneFn)
+	fmt.Printf("Channel:%v\n", c)
+}
+func (suite *Suite) Test02Patterns16OrDoneParamsFn() {
+	dh := concurrency.NewDoneHandler()
+	defer dh.GetDoneFunc()()
+	c := concurrency.OrDoneParamsFn(dh.Done(), make(chan interface{}), doneParamsFn, 1, 2)
+	fmt.Printf("Channel:%v\n", c)
+}
+func (suite *Suite) Test02Patterns17OrDoneChanParamFn() {
+	dh := concurrency.NewDoneHandler()
+	defer dh.GetDoneFunc()()
+	c1 := make(chan interface{})
+	c := concurrency.OrDoneChanParamFn(dh.Done(), make(chan interface{}), doneChanParamFn, c1)
+	go func() {
+		for i := 0; i < 5; i++ {
+			c1 <- i
+		}
+	}()
+	fmt.Printf("Channel:%v\n", c)
+}
+
+func (suite *Suite) Test02Patterns17OrDoneChanParamsFn() {
+	dh := concurrency.NewDoneHandler()
+	defer dh.GetDoneFunc()()
+	c1 := make(chan interface{})
+	c2 := make(chan interface{})
+	c := concurrency.OrDoneChanParamsFn(dh.Done(), make(chan interface{}), doneChanParamsFn, c1, c2)
+	go func() {
+		for i := 0; i < 5; i++ {
+			c1 <- i
+		}
+	}()
+	go func() {
+		for i := 5; i < 10; i++ {
+			c2 <- i
+		}
+	}()
+	fmt.Printf("Channel:%v\n", c)
 }

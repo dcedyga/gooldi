@@ -95,22 +95,33 @@ func (suite *Suite) Test04BCaster01CustomProcessors() {
 
 	//wd, _ := mp.Get(1)
 	go func() {
+		i := 0
+		exit := false
 		for msgId := 0; msgId < 300000; msgId++ {
-			if msgId == 10 {
-				w2.Stop()
-			} else if msgId == 15 {
-				w2.Start()
+			select {
+			case <-dh.Done():
+				exit = true
+			default:
+				if msgId == 10 {
+					w2.Stop()
+				} else if msgId == 15 {
+					w2.Start()
+				}
+				e := concurrency.NewMessage(
+					msgId,
+					b.MsgType,
+				)
+				b.Broadcast(e)
+				i++
 			}
-			e := concurrency.NewMessage(
-				msgId,
-				b.MsgType,
-			)
-
-			b.Broadcast(e)
+			if exit {
+				break
+			}
 
 		}
-
+		fmt.Printf("Total Messages Broadcasted: %v,\n", i)
 	}()
+
 	time.Sleep(1000 * time.Millisecond)
 
 }

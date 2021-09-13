@@ -14,7 +14,7 @@ type MultiMsgMultiplexerOption func(*MultiMsgMultiplexer)
 // MultiMsgMultiplexer - The default implementation MultiMsgMultiplexer allows to create complex patterns where multiple Broadcasters
 // can emit a Message to multiple processors (consumers) that can potentially represent multiple processing systems,
 // do the relevant calculation and multiplex the multiple outputs into a single channel for simplified consumption.
-// Its main function is to Mulitplex a set of multiple messages that can be parallel processed and  converge the set of
+// Its main function is to Mulitplex a set of multiple messages that can be concurrently processed and converge the set of
 // initial concurrency.Message into a SortedMap ordered by messageType that can be sent on one channel.
 // values of the processors grouped by initial concurrency.Message and ordered by index value of each processor.
 // Closure of MultiMsgMultiplexer is handle by a concurrency.DoneHandler that allows to control they way a set of go routines
@@ -35,23 +35,24 @@ type MultiMsgMultiplexer struct {
 	inputChannels *Map
 	doneHandler   *DoneHandler
 	outputMap     *SortedMap
-	preStream     chan (<-chan interface{})
 	stream        chan (<-chan interface{})
 	lock          *sync.RWMutex
 	index         int64
+	toStringIndex string
+	isReady       bool
 	waitForAll    bool
 	BufferSize    int
 	MsgType       string
 	sendPeriod    *time.Duration
-	getKeyFn      func(v interface{}) int64
+	getItemKeyFn  func(v interface{}) int64
 	transformFn   func(mp *MultiMsgMultiplexer, sm *SortedMap) interface{}
 }
 
 // MultiMsgResultItem - The result item to be stored in the output SortedMap
-type MultiMsgResultItem struct {
-	key   interface{}
-	value interface{}
-}
+// type MultiMsgResultItem struct {
+// 	key   interface{}
+// 	value interface{}
+// }
 
 //NewMultiMsgMultiplexer - Constructor
 func NewMultiMsgMultiplexer(dh *DoneHandler, msgType string, opts ...MultiMsgMultiplexerOption) *MultiMsgMultiplexer {
@@ -61,19 +62,25 @@ func NewMultiMsgMultiplexer(dh *DoneHandler, msgType string, opts ...MultiMsgMul
 		inputChannels: NewMap(),
 		doneHandler:   dh,
 		outputMap:     NewSortedMap(),
-		preStream:     make(chan (<-chan interface{})),
 		stream:        make(chan (<-chan interface{})),
 		index:         0,
+		toStringIndex: "00000000000000000000",
+		isReady:       false,
 		waitForAll:    false,
 		BufferSize:    1,
 		MsgType:       msgType,
 		sendPeriod:    nil,
 		lock:          &sync.RWMutex{},
 	}
-	mp.getKeyFn = mp.defaultItemKey
+
+	mp.getItemKeyFn = defaultMultiMsgGetItemKey
 	mp.transformFn = defaultMultiMsgTransformFn
+
 	for _, opt := range opts {
 		opt(mp)
+	}
+	if mp.sendPeriod != nil {
+		go mp.sendWithTimer()
 	}
 	go mp.doneRn()
 	return mp
@@ -91,6 +98,7 @@ func (mp *MultiMsgMultiplexer) doneRn() {
 func MultiMsgMultiplexerIndex(idx int64) MultiMsgMultiplexerOption {
 	return func(mp *MultiMsgMultiplexer) {
 		mp.index = idx
+		mp.toStringIndex = IndexToString(idx)
 	}
 }
 
@@ -127,7 +135,7 @@ func MultiMsgMultiplexerTransformFn(fn func(mp *MultiMsgMultiplexer, sm *SortedM
 // of an item of the channel to the map of the MultiMsgMultiplexer specific to a message
 func MultiMsgMultiplexerItemKeyFn(fn func(v interface{}) int64) MultiMsgMultiplexerOption {
 	return func(mp *MultiMsgMultiplexer) {
-		mp.getKeyFn = fn
+		mp.getItemKeyFn = fn
 	}
 }
 
@@ -137,36 +145,28 @@ func (mp *MultiMsgMultiplexer) ID() string {
 }
 
 // Index - retrieves the index of the MultiMsgMultiplexer
-func (mp *MultiMsgMultiplexer) Index() interface{} {
+func (mp *MultiMsgMultiplexer) Index() int64 {
 	return mp.index
+}
+
+// DoneHandler - retrieves the DoneHandler of the MultiMsgMultiplexer
+func (mp *MultiMsgMultiplexer) DoneHandler() *DoneHandler {
+	return mp.doneHandler
+}
+
+// ToStringIndex - retrieves the ToStringIndex representation of the MsgMultiplexer
+func (mp *MultiMsgMultiplexer) ToStringIndex() string {
+	return mp.toStringIndex
 }
 
 // Set - Registers a channel in the MultiMsgMultiplexer and starts processing it
 func (mp *MultiMsgMultiplexer) Set(key interface{}, value chan interface{}) {
 	mp.lock.Lock()
-
 	mp.inputChannels.Set(key, value)
 	m := NewSortedMap()
 	mp.outputMap.Set(key, m)
-
 	mp.lock.Unlock()
-	go func(key interface{}) {
-		for item := range value {
-			select {
-			default:
-				s := make(chan interface{}, 1)
-				i := &MultiMsgResultItem{
-					key:   key,
-					value: item,
-				}
-				s <- i
-				close(s)
-				mp.preStream <- s
-
-			}
-		}
-
-	}(key)
+	go mp.processChannel(key, value, m)
 
 }
 
@@ -181,22 +181,53 @@ func (mp *MultiMsgMultiplexer) Get(key interface{}) (chan interface{}, bool) {
 	return v.(chan interface{}), true
 }
 
-// delete - Deletes a registered channel from the MsgMultiplexer map of inputChannels
-func (mp *MultiMsgMultiplexer) delete(key interface{}) {
+// Delete - Deletes a registered channel from the MsgMultiplexer map of inputChannels
+func (mp *MultiMsgMultiplexer) clean(key interface{}) {
 	mp.lock.Lock()
 	defer mp.lock.Unlock()
-
 	mp.inputChannels.Delete(key)
-
 }
 
-// Start - starts the main process of the MultiMsgMultiplexer
-func (mp *MultiMsgMultiplexer) Start() {
-	go mp.mainProcess()
-	if mp.sendPeriod != nil {
-		go mp.sendWithTimer()
+// processChannel - Retrieves all the values of an inputChannel using range and when done it deletes it
+// from the MsgMultiplexer map of inputChannels.
+func (mp *MultiMsgMultiplexer) processChannel(key interface{}, value chan interface{}, m *SortedMap) {
+	for item := range value {
+		select {
+		//case <-mp.doneHandler.Done(): //need to check this
+		default:
+			cKey := mp.getItemKeyFn(item)
+			mp.storeInOutputMap(cKey, item, m)
+			if mp.sendPeriod == nil {
+				mp.sendWhenReady()
+			}
+		}
 	}
+	mp.clean(key)
+}
 
+//storeInOutputMap - Adds an item to the SortedMap that is going to be send as part of the output, the SortedMap
+// length is defined by the BufferSize property, allowing to retrieve the last n messages for a specific Messagetype.
+func (mp *MultiMsgMultiplexer) storeInOutputMap(cKey int64, v interface{}, m *SortedMap) {
+	mp.lock.Lock()
+	//Check length
+	if m.Len() == mp.BufferSize {
+		//delete first Item
+		itemToDelete, okd := m.GetSortedMapItemByIndex(0)
+		if okd {
+			m.Delete(itemToDelete.Key)
+		}
+	}
+	//Add new item
+	m.Set(cKey, v)
+	mp.lock.Unlock()
+}
+
+func (mp *MultiMsgMultiplexer) sendWhenReady() {
+	mp.lock.Lock()
+	defer mp.lock.Unlock()
+	if mp.allReady() {
+		mp.sendToMainBridge()
+	}
 }
 
 // sendWithTimer - sends the output with every tick defined by the sendPeriod property.
@@ -209,28 +240,12 @@ loop:
 			drain = true
 			continue loop
 		case <-time.After(*mp.sendPeriod):
-			mp.sendToMainBridge()
+			if mp.allReady() {
+				mp.sendToMainBridge()
+			}
 		}
 	}
 
-}
-
-// AddItemToMap - Adds an item to the SortedMap that is going to be send as part of the output, the SortedMap
-// length is defined by the BufferSize property, allowing to retrieve the last n messages for a specific Messagetype.
-func (mp *MultiMsgMultiplexer) AddItemToMap(v interface{}, m *SortedMap) {
-
-	//Check length
-	if m.Len() == mp.BufferSize {
-		//delete first Item
-		// keyToDelete, okd := m.GetKeyByIndex(0)
-		// if okd {
-		// 	m.Delete(keyToDelete)
-		// }
-	}
-	//Add new item
-	mp.lock.Lock()
-	m.Set(mp.getKeyFn(v), v)
-	mp.lock.Unlock()
 }
 
 // sendToMainBridge - sends the output SortedMap item to the output stream for consumption, using the bridge pattern.
@@ -239,67 +254,36 @@ func (mp *MultiMsgMultiplexer) sendToMainBridge() {
 	s := make(chan interface{}, 1)
 	s <- e
 	close(s)
-	mp.stream <- s
-}
-
-// mainProcess - The main process of the multiplexer it retrieves all the input messages that are on
-// the preStream bridge and checks when and output result is ready by grouping all the messages into a
-// SortedMap by a defined key. The SortedMap also sorts the output by the key of the inputChannel,
-// producing a deterministic output.
-func (mp *MultiMsgMultiplexer) mainProcess() {
-	drain := false
-	for v := range mp.bridgeIter() {
-		nextItem := false
-	loop:
-		for !nextItem && !drain {
-			select {
-			case <-mp.doneHandler.Done():
-				nextItem = true
-				drain = true
-				continue loop
-			default:
-				key := v.(*MultiMsgResultItem).key
-				item := v.(*MultiMsgResultItem).value
-				rm, ok := mp.outputMap.Get(key)
-				if ok {
-					m := rm.(*SortedMap)
-					mp.AddItemToMap(item, m)
-					//If waitForAll - we just wait till all the maps have at least one entry
-					if mp.waitForAll && !mp.allReady() {
-						nextItem = true
-						continue loop
-					}
-					if mp.sendPeriod == nil {
-						mp.sendToMainBridge()
-					}
-					nextItem = true
-					continue loop
-				}
-
-			}
-		}
-
+	select {
+	case <-mp.doneHandler.Done():
+	case mp.stream <- s:
 	}
+
 }
 
 // Checks if all the inputChannels have at least sent one item
 func (mp *MultiMsgMultiplexer) allReady() bool {
-	allReady := true
-	for item := range mp.outputMap.Iter() {
-		i := item.Value.(*SortedMap)
-		if i.Len() == 0 {
-			allReady = false
-
-		}
+	if !mp.waitForAll {
+		return true
 	}
-	return allReady
+	if !mp.isReady {
+		allready := true
+		for item := range mp.outputMap.Iter() {
+			i := item.Value.(*SortedMap)
+			if i.Len() == 0 {
+				allready = false
+			}
+		}
+		mp.isReady = allready
+	}
+	return mp.isReady
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 // close - Closes the MultiMsgMultiplexer
 func (mp *MultiMsgMultiplexer) close() {
-
 	fmt.Printf("MultiMsgMultiplexer - is closed\n")
-
 }
 
 // Iter iterates over the items in the MultiMsgMultiplexer
@@ -309,21 +293,20 @@ func (mp *MultiMsgMultiplexer) Iter() chan interface{} {
 	return Bridge(mp.doneHandler.Done(), mp.stream)
 }
 
-// bridgeIter iterates over the items of the preStream channel in the MultiMsgMultiplexer
-// Each item is sent over a channel, so that
-// we can iterate over it using the builtin range keyword
-func (mp *MultiMsgMultiplexer) bridgeIter() <-chan interface{} {
-	return Bridge(mp.doneHandler.Done(), mp.preStream)
+func (mp *MultiMsgMultiplexer) String() string {
+	mp.lock.Lock()
+	defer mp.lock.Unlock()
+	return "Index: " + mp.toStringIndex + "ID: " + mp.ID()
 }
 
 /******************************************************************************
 Plug and Play and Transformation functions
 *******************************************************************************/
 
-// defaultItemKey - gets the last registered key when a new channel is added or removed. It
-// is used in conjunction with the defaultItemKey to extract the length of the output SortedMap.
+// defaultMultiMsgGetItemKey - gets the last registered key when a new channel is added or removed. It
+// is used in conjunction with the defaultMultiMsgGetItemKey to extract the length of the output SortedMap.
 // Can be overridden for a more generic implementation
-func (mp *MultiMsgMultiplexer) defaultItemKey(v interface{}) int64 {
+func defaultMultiMsgGetItemKey(v interface{}) int64 {
 	return v.(*Message).CorrelationKey
 }
 
@@ -331,14 +314,9 @@ func (mp *MultiMsgMultiplexer) defaultItemKey(v interface{}) int64 {
 // output channel of the MultiMsgMultiplexer. Can be overridden for a more generic implementation
 // Oriented
 func defaultMultiMsgTransformFn(mp *MultiMsgMultiplexer, r *SortedMap) interface{} {
-	mp.lock.Lock()
-	defer mp.lock.Unlock()
 	m := NewSortedMap()
 	for item := range r.Iter() {
-		it := NewSortedMap()
-		for i := range item.Value.(*SortedMap).Iter() {
-			it.Set(i.Key, i.Value)
-		}
+		it := item.Value.(*SortedMap).Clone()
 		m.Set(item.Key, it)
 	}
 	rmsg := NewMessage(m,

@@ -20,6 +20,7 @@ type Processor struct {
 	doneHandler   *DoneHandler
 	inputChan     chan interface{}
 	index         int64
+	toStringIndex string
 	id            string
 	outputChannel chan interface{}
 	lock          *sync.RWMutex
@@ -37,6 +38,7 @@ func NewProcessor(name string, dh *DoneHandler, opts ...ProcessorOption) *Proces
 		inputChan:     nil,
 		outputChannel: make(chan interface{}),
 		index:         0,
+		toStringIndex: "00000000000000000000",
 		state:         Init,
 		lock:          &sync.RWMutex{},
 	}
@@ -68,6 +70,7 @@ func ProcessorTransformFn(fn func(pr *Processor, input interface{}, result inter
 func ProcessorWithIndex(idx int64) ProcessorOption {
 	return func(p *Processor) {
 		p.index = idx
+		p.toStringIndex = IndexToString(idx)
 	}
 }
 
@@ -88,6 +91,11 @@ func (p *Processor) Index() int64 {
 	return p.index
 }
 
+// ToStringIndex - retrieves the ToStringIndex representation of the Processor
+func (p *Processor) ToStringIndex() string {
+	return p.toStringIndex
+}
+
 // InputChannel - retrieves the InputChannel of the Processor
 func (p *Processor) InputChannel() chan interface{} {
 	return p.inputChan
@@ -98,43 +106,59 @@ func (p *Processor) OutputChannel() chan interface{} {
 	return p.outputChannel
 }
 
+// DoneHandler - retrieves the DoneHandler of the Processor
+func (p *Processor) DoneHandler() *DoneHandler {
+	return p.doneHandler
+}
+
 // Process - When the processor is in Processing state processes a defined function. When the Processor is
 // in stop state the processor will still consume messages from the input channel but it will produce a nil
 // output as no process will be involved.
 func (p *Processor) Process(f func(pr *Processor, input interface{}, params ...interface{}) interface{}, params ...interface{}) {
 	p.setState(Processing)
-	drain := false
+	closed := false
 	for input := range p.inputChan {
 		var result interface{}
 		if p.GetState() == Processing {
 			result = f(p, input, params...)
 		}
-		r := p.transformFn(p, input, result)
-		nextItem := false
-	loop:
-		for !nextItem && !drain {
+		if !closed {
 			select {
-			case <-p.doneHandler.Done():
-				nextItem = true
-				drain = true
-				continue loop
+			case <-p.outputChannel:
+				//fmt.Printf("outputChannel:%v done\n", p.outputChannel)
+				closed = true
 			default:
-				select {
-				case p.outputChannel <- r:
-					nextItem = true
-					continue loop
-				}
+				p.outputChannel <- p.transformFn(p, input, result)
 			}
 		}
+		//nextItem := false
+		// loop:
+		// 	for !nextItem && !drain {
+		// 		select {
+		// 		case <-p.doneHandler.Done():
+		// 			nextItem = true
+		// 			drain = true
+		// 			continue loop
+		// 		default:
+		// select {
+		// case p.outputChannel <- r:
+		// 	nextItem = true
+		// 	continue loop
+		// }
+		//}
+		//}
 	}
-	CloseChannel(p.outputChannel)
+	if !closed {
+		CloseChannel(p.outputChannel)
+	}
+
 }
 
 // Stop - stops the processor.
 func (p *Processor) Stop() {
 	p.lock.Lock()
 	p.state = Stopped
-	p.inputChan = nil
+	//p.inputChan = nil
 	p.lock.Unlock()
 
 }
@@ -149,12 +173,12 @@ func (p *Processor) Start() {
 
 // GetState - retrieves the state of the Processor
 func (p *Processor) GetState() State {
-	p.lock.RLock()
-	defer p.lock.RUnlock()
+	p.lock.Lock()
+	defer p.lock.Unlock()
 	return p.state
 }
 
-// setState - retrieves the state of the Processor
+// setState - sets the state of the Processor
 func (p *Processor) setState(val State) {
 	p.lock.Lock()
 	p.state = val
@@ -175,6 +199,12 @@ func (p *Processor) close() {
 	p.inputChan = nil
 	p.lock.Unlock()
 
+}
+
+func (p *Processor) String() string {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	return "Index: " + p.toStringIndex + "ID: " + p.ID()
 }
 
 /******************************************************************************

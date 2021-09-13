@@ -22,12 +22,41 @@ type SortedSliceItem struct {
 	Value interface{}
 }
 
-func (a sortedSliceArray) Len() int      { return len(a) }
-func (a sortedSliceArray) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a sortedSliceArray) Len() int { return len(a) }
+func (a sortedSliceArray) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
 func (a sortedSliceArray) Less(i, j int) bool {
-	s := fmt.Sprintf("%v", a[i])
-	s2 := fmt.Sprintf("%v", a[j])
-	return s < s2
+	switch a[i].(type) {
+	case int:
+		return a[i].(int) < a[j].(int)
+	case int8:
+		return a[i].(int8) < a[j].(int8)
+	case int16:
+		return a[i].(int16) < a[j].(int16)
+	case int32:
+		return a[i].(int32) < a[j].(int32)
+	case int64:
+		return a[i].(int64) < a[j].(int64)
+	case uint:
+		return a[i].(uint) < a[j].(uint)
+	case uint8:
+		return a[i].(uint8) < a[j].(uint8)
+	case uint16:
+		return a[i].(uint16) < a[j].(uint16)
+	case uint32:
+		return a[i].(uint32) < a[j].(uint32)
+	case uint64:
+		return a[i].(uint64) < a[j].(uint64)
+	case float32:
+		return a[i].(float32) < a[j].(float32)
+	case float64:
+		return a[i].(float64) < a[j].(float64)
+	default:
+		s := fmt.Sprintf("%v", a[i])
+		s2 := fmt.Sprintf("%v", a[j])
+		return s < s2
+	}
 
 }
 

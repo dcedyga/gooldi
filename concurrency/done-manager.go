@@ -165,7 +165,7 @@ func (dm *DoneManager) getLayerSortedMap(layer int) (*SortedMap, bool) {
 	return item.(*SortedMap), ok
 }
 
-// getQueryDoneHandler - Gets a QueryDoneHandler with the relevant opts for the query.
+// GetQueryDoneHandler - Gets a QueryDoneHandler with the relevant opts for the query.
 func (dm *DoneManager) getQueryDoneHandler(opts ...QueryDoneHandlerOption) *QueryDoneHandler {
 	q := &QueryDoneHandler{key: nil, layer: -1}
 	for _, opt := range opts {
