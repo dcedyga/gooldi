@@ -7,7 +7,7 @@
 
 <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> provides a thread-safe implementation of Map, Slice, SortedMap and SortedSlice to access to the relevant maps and slice types shared across goroutines without race conditions.
 
-Performance wise <a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> can deliver throughputs of 500k processed messages per second (hardware used: macbook pro with 32G of RAM and 2,9 GHz Intel Core i9 processor).
+<a href="https://github.com/dcedyga/gooldi"><img align="center" src="https://capsule-render.vercel.app/api?type=soft&color=ff9933&fontColor=ffffff&height=300&section=header&text=gooldi&fontSize=160&animation=fadeIn&fontAlignY=55" width="70" height="23"/></a> can deliver, performance wise, throughputs of 500k processed messages per second (hardware used: macbook pro with 32G of RAM and 2,9 GHz Intel Core i9 processor).
 ## Concurrency in Go
 ```
 Concurrency is about dealing with lots of things at once. It is a way to structure software, 
