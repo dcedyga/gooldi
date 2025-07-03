@@ -1,6 +1,6 @@
 package concurrency
 
-//CloseChannel - Checks if the channel is not closed and closes it
+// CloseChannel - Checks if the channel is not closed and closes it
 func CloseChannel(ch chan interface{}) {
 	select {
 	case <-ch:

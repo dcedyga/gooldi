@@ -192,7 +192,7 @@ func (p *Processor) HasValidInputChan() bool {
 	return p.inputChan != nil
 }
 
-//close - Closes the processor
+// close - Closes the processor
 func (p *Processor) close() {
 	//fmt.Printf("Processor %v: Closing\n", p.Name)
 	p.lock.Lock()

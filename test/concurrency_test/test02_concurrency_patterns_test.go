@@ -35,7 +35,7 @@ type Human struct {
 	Age  int
 }
 
-//Repeat
+// Repeat
 func (suite *Suite) Test02Patterns02RepeatGoRoutine() {
 	dh := concurrency.NewDoneHandler()
 	defer dh.GetDoneFunc()()
@@ -132,8 +132,8 @@ func getTime(done <-chan interface{}) <-chan interface{} {
 	return stream
 }
 
-//FanIn: We can use it to gather state from all the subscriptions, timers, services, clients on a best effort bases
-//and use this state as the entry point for the plan phase in a sense->plan->act pattern
+// FanIn: We can use it to gather state from all the subscriptions, timers, services, clients on a best effort bases
+// and use this state as the entry point for the plan phase in a sense->plan->act pattern
 func (suite *Suite) Test02Patterns06FanIn() {
 	dh := concurrency.NewDoneHandler()
 	defer dh.GetDoneFunc()()

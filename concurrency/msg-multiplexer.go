@@ -62,7 +62,7 @@ type MsgMultiplexer struct {
 	transformFn                    func(mp *MsgMultiplexer, sm *SortedMap, correlationKey int64) interface{}
 }
 
-//NewMsgMultiplexer - Constructor
+// NewMsgMultiplexer - Constructor
 func NewMsgMultiplexer(dh *DoneHandler, msgType string, opts ...MsgMultiplexerOption) *MsgMultiplexer {
 	id := uuid.NewV4().String()
 	mp := &MsgMultiplexer{
@@ -504,7 +504,7 @@ func (mp *MsgMultiplexer) processChannel(key interface{}, value chan interface{}
 
 }
 
-//storeInPreStreamMap - store stream item in PreStreamMap per correlationKey
+// storeInPreStreamMap - store stream item in PreStreamMap per correlationKey
 func (mp *MsgMultiplexer) storeInPreStreamMap(cKey int64, index interface{}, v interface{}) {
 	mp.lock.Lock()
 	defer mp.lock.Unlock()
@@ -704,7 +704,7 @@ func (mp *MsgMultiplexer) Iter() chan interface{} {
 	return Bridge(mp.doneHandler.Done(), mp.stream)
 }
 
-//PrintPreStreamMap - prints the preStreamMap
+// PrintPreStreamMap - prints the preStreamMap
 func (mp *MsgMultiplexer) PrintPreStreamMap() {
 	mp.lock.Lock()
 	defer mp.lock.Unlock()

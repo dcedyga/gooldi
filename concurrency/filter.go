@@ -184,7 +184,7 @@ func (f *Filter) HasValidInputChan() bool {
 	return f.inputChan != nil
 }
 
-//close - Closes the filter
+// close - Closes the filter
 func (f *Filter) close() {
 	fmt.Printf("Filter %v: Closing\n", f.Name)
 	f.lock.Lock()

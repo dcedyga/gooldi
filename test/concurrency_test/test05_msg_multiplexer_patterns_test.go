@@ -201,7 +201,7 @@ func (suite *Suite) Test05MsgMultiplexer04Delete3Processors() {
 	processor2 := w.GetItemAtIndex(4).(*concurrency.Processor)
 	processor3 := w.GetItemAtIndex(6).(*concurrency.Processor)
 	// Broadcast Messages
-	broadcastWithDeleteAfterCKey3(b, 30, 5,12,25, mp, processor1,processor2,processor3)
+	broadcastWithDeleteAfterCKey3(b, 30, 5, 12, 25, mp, processor1, processor2, processor3)
 
 	time.Sleep(1000 * time.Millisecond)
 
@@ -479,7 +479,7 @@ func (suite *Suite) Test05MsgMultiplexer09AddAndDeleteProcessor() {
 
 	processor1 := w.GetItemAtIndex(2).(*concurrency.Processor)
 	// Broadcast Messages
-	broadcastWithAddDelete(b, 30, 25, mp, processor1,dh1)
+	broadcastWithAddDelete(b, 30, 25, mp, processor1, dh1)
 
 	time.Sleep(1000 * time.Millisecond)
 
@@ -524,7 +524,7 @@ func (suite *Suite) Test05MsgMultiplexer10AddDeleteDecoupled() {
 	processor1 := w.GetItemAtIndex(1).(*concurrency.Processor)
 	processor3 := w.GetItemAtIndex(3).(*concurrency.Processor)
 	processor5 := w.GetItemAtIndex(5).(*concurrency.Processor)
-	
+
 	go func() {
 		time.Sleep(500 * time.Microsecond)
 		mp.Delete(processor1.Index())
@@ -584,7 +584,7 @@ func (suite *Suite) Test05MsgMultiplexer11AddDeleteDecoupledWithTimeDiff() {
 	processor1 := w.GetItemAtIndex(1).(*concurrency.Processor)
 	processor3 := w.GetItemAtIndex(3).(*concurrency.Processor)
 	processor5 := w.GetItemAtIndex(5).(*concurrency.Processor)
-	
+
 	go func() {
 		time.Sleep(500 * time.Microsecond)
 		mp.Delete(processor1.Index())
@@ -644,7 +644,7 @@ func (suite *Suite) Test05MsgMultiplexer12AddAtCorrelationKey() {
 		fmt.Printf("Total Messages Multiplexed: %v,\n", i)
 	}()
 	// Broadcast Messages
-	broadcastWithAddAtCKey(b, 20, 18,4,dh1, mp) 
+	broadcastWithAddAtCKey(b, 20, 18, 4, dh1, mp)
 
 	time.Sleep(1000 * time.Millisecond)
 
@@ -695,7 +695,7 @@ func (suite *Suite) Test05MsgMultiplexer13DeleteAddAtSameCorrelationKey() {
 	// Broadcast Messages
 	processor1 := w.GetItemAtIndex(1).(*concurrency.Processor)
 
-	broadcastWithDeleteAddAtCKeys(b, 20, 18,18,4,dh1, mp,processor1) 
+	broadcastWithDeleteAddAtCKeys(b, 20, 18, 18, 4, dh1, mp, processor1)
 
 	time.Sleep(1000 * time.Millisecond)
 
@@ -746,7 +746,7 @@ func (suite *Suite) Test05MsgMultiplexer14DeleteAddAtDiffCorrelationKey() {
 	// Broadcast Messages
 	processor1 := w.GetItemAtIndex(1).(*concurrency.Processor)
 
-	broadcastWithDeleteAddAtCKeys(b, 20, 17,18,4,dh1, mp,processor1) 
+	broadcastWithDeleteAddAtCKeys(b, 20, 17, 18, 4, dh1, mp, processor1)
 
 	time.Sleep(1000 * time.Millisecond)
 
@@ -815,7 +815,7 @@ func (suite *Suite) Test05MsgMultiplexer16StopDeleteStart() {
 	)
 	defer doneWithBCaster(dm, mp, b)
 	//Create Processors
-	w :=createProcessorsFrom(mp, b, dh1, 0, 4)
+	w := createProcessorsFrom(mp, b, dh1, 0, 4)
 	//mp start
 	mp.Start()
 	// Print output
@@ -917,7 +917,7 @@ func (suite *Suite) Test05MsgMultiplexer18StopDeleteAddStart() {
 	)
 	defer doneWithBCaster(dm, mp, b)
 	//Create Processors
-	w :=createProcessorsFrom(mp, b, dh1, 0, 4)
+	w := createProcessorsFrom(mp, b, dh1, 0, 4)
 	//mp start
 	mp.Start()
 	// Print output
@@ -989,9 +989,9 @@ func (suite *Suite) Test05MsgMultiplexer19StopAfterCorrelationnKey() {
 		}
 		fmt.Printf("Total Messages Multiplexed: %v,\n", i)
 	}()
-	
+
 	// Broadcast Messages
-	broadcastWitStopAfterCKeys(b, 10,5, mp)
+	broadcastWitStopAfterCKeys(b, 10, 5, mp)
 
 	time.Sleep(1000 * time.Millisecond)
 
@@ -1032,9 +1032,9 @@ func (suite *Suite) Test05MsgMultiplexer20StopStartAfterCorrelationnKeys() {
 		}
 		fmt.Printf("Total Messages Multiplexed: %v,\n", i)
 	}()
-	
+
 	// Broadcast Messages
-	broadcastWitStopStartAfterCKeys(b, 20,4,9, mp)
+	broadcastWitStopStartAfterCKeys(b, 20, 4, 9, mp)
 
 	time.Sleep(1000 * time.Millisecond)
 
@@ -1075,9 +1075,9 @@ func (suite *Suite) Test05MsgMultiplexer21StartAfterCorrelationnKey() {
 		}
 		fmt.Printf("Total Messages Multiplexed: %v,\n", i)
 	}()
-	
+
 	// Broadcast Messages
-	broadcastWitStartAfterCKeys(b, 10,4, mp)
+	broadcastWitStartAfterCKeys(b, 10, 4, mp)
 
 	time.Sleep(1000 * time.Millisecond)
 
@@ -1098,7 +1098,7 @@ func (suite *Suite) Test05MsgMultiplexer22StopAddDeleteStartAfterCorrelationnKey
 	)
 	defer doneWithBCaster(dm, mp, b)
 	//Create Processors
-	w:=createProcessorsFrom(mp, b, dh1, 0, 4)
+	w := createProcessorsFrom(mp, b, dh1, 0, 4)
 	//mp start
 	mp.Start()
 	// Print output
@@ -1120,7 +1120,7 @@ func (suite *Suite) Test05MsgMultiplexer22StopAddDeleteStartAfterCorrelationnKey
 	}()
 	processor1 := w.GetItemAtIndex(2).(*concurrency.Processor)
 	// Broadcast Messages
-	broadcastWitStopAddDeleteStartAfterCKeys(b, 20,4, 9,4,dh1,mp,processor1) 
+	broadcastWitStopAddDeleteStartAfterCKeys(b, 20, 4, 9, 4, dh1, mp, processor1)
 	time.Sleep(1000 * time.Millisecond)
 
 }
@@ -1140,7 +1140,7 @@ func (suite *Suite) Test05MsgMultiplexer23StopDeleteStartAfterCorrelationnKeys()
 	)
 	defer doneWithBCaster(dm, mp, b)
 	//Create Processors
-	w:=createProcessorsFrom(mp, b, dh1, 0, 4)
+	w := createProcessorsFrom(mp, b, dh1, 0, 4)
 	//mp start
 	mp.Start()
 	// Print output
@@ -1162,7 +1162,7 @@ func (suite *Suite) Test05MsgMultiplexer23StopDeleteStartAfterCorrelationnKeys()
 	}()
 	processor1 := w.GetItemAtIndex(2).(*concurrency.Processor)
 	// Broadcast Messages
-	broadcastWitStopDeleteStartAfterCKeys(b, 20,4, 9,mp,processor1) 
+	broadcastWitStopDeleteStartAfterCKeys(b, 20, 4, 9, mp, processor1)
 	time.Sleep(1000 * time.Millisecond)
 
 }
@@ -1203,7 +1203,7 @@ func (suite *Suite) Test05MsgMultiplexer24StopAddStartAfterCorrelationnKeys() {
 		fmt.Printf("Total Messages Multiplexed: %v,\n", i)
 	}()
 	// Broadcast Messages
-	broadcastWitStopAddStartAfterCKeys(b, 20,4, 9,4,dh1,mp) 
+	broadcastWitStopAddStartAfterCKeys(b, 20, 4, 9, 4, dh1, mp)
 	time.Sleep(1000 * time.Millisecond)
 
 }

@@ -201,7 +201,7 @@ func (cm *SortedMap) Sort() {
 	}
 }
 
-//Len - length of the map
+// Len - length of the map
 func (cm *SortedMap) Len() int {
 	cm.lock.RLock()
 	defer cm.lock.RUnlock()

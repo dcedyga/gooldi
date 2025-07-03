@@ -2,26 +2,28 @@ package concurrency_test
 
 import (
 	"fmt"
+	concurrency "github.com/dcedyga/gooldi/concurrency"
 	"sync"
 	"testing"
 	"time"
-	concurrency "github.com/dcedyga/gooldi/concurrency"
 
 	"github.com/stretchr/testify/suite"
 )
+
 type Suite struct {
 	suite.Suite
 }
-//
+
 func TestSuite(t *testing.T) {
 	suite.Run(t, new(Suite))
 }
-//
+
 func (suite *Suite) SetupSuite() {}
-//
+
 func (suite *Suite) SetupTest() {}
-//
+
 func (suite *Suite) TearDownSuite() {}
+
 // Broadcaster
 func clientFunc(id int, b *concurrency.BCaster, dh *concurrency.DoneHandler) {
 	msgCh := b.AddListener(dh)
@@ -130,7 +132,7 @@ func slowprocess9(pr *concurrency.Processor, input interface{}, params ...interf
 	msg := input.(*concurrency.Message)
 	id := params[0]
 	i := msg.Message.(int) * 15
-	time.Sleep(5*time.Millisecond)
+	time.Sleep(5 * time.Millisecond)
 	return concurrency.NewMessage(fmt.Sprintf("ClientId %v: multiplies by 15 but is slow -> message: %v, value: %v", id, msg.Message, i),
 		msg.MsgType,
 		concurrency.MessageWithCorrelationKey(msg.CorrelationKey),
@@ -357,7 +359,7 @@ func broadcastWithDeleteAfterCKey(b *concurrency.BCaster, numMsg int, stopAt int
 		fmt.Printf("Total Messages Broadcasted: %v,\n", i)
 	}()
 }
-func broadcastWithDeleteAfterCKey3(b *concurrency.BCaster, numMsg int, delAt1,delAt2,delAt3 int, mp *concurrency.MsgMultiplexer, w1,w2,w3 *concurrency.Processor) {
+func broadcastWithDeleteAfterCKey3(b *concurrency.BCaster, numMsg int, delAt1, delAt2, delAt3 int, mp *concurrency.MsgMultiplexer, w1, w2, w3 *concurrency.Processor) {
 	go func() {
 		i := 0
 		exit := false
@@ -392,7 +394,7 @@ func broadcastWithDeleteAfterCKey3(b *concurrency.BCaster, numMsg int, delAt1,de
 		fmt.Printf("Total Messages Broadcasted: %v,\n", i)
 	}()
 }
-func broadcastWithDeleteAddAtCKeys(b *concurrency.BCaster, numMsg int,deleteAt int, addAt int,numWorker int, dh1 *concurrency.DoneHandler,mp *concurrency.MsgMultiplexer,w1 *concurrency.Processor) {
+func broadcastWithDeleteAddAtCKeys(b *concurrency.BCaster, numMsg int, deleteAt int, addAt int, numWorker int, dh1 *concurrency.DoneHandler, mp *concurrency.MsgMultiplexer, w1 *concurrency.Processor) {
 	go func() {
 		i := 0
 		exit := false
@@ -419,7 +421,7 @@ func broadcastWithDeleteAddAtCKeys(b *concurrency.BCaster, numMsg int,deleteAt i
 						//concurrency.ProcessorTransformFn(concurrency.ProcessorEventTransformFn),
 					)
 					if mp != nil {
-						mp.SetAtCorrelationKey(w.Index(), w.OutputChannel(),e.CorrelationKey)
+						mp.SetAtCorrelationKey(w.Index(), w.OutputChannel(), e.CorrelationKey)
 					}
 					if numWorker%8 == 0 {
 						go w.Process(process8, numWorker)
@@ -450,7 +452,7 @@ func broadcastWithDeleteAddAtCKeys(b *concurrency.BCaster, numMsg int,deleteAt i
 		fmt.Printf("Total Messages Broadcasted: %v,\n", i)
 	}()
 }
-func broadcastWithAddAtCKey(b *concurrency.BCaster, numMsg int, addAt int,numWorker int, dh1 *concurrency.DoneHandler,mp *concurrency.MsgMultiplexer) {
+func broadcastWithAddAtCKey(b *concurrency.BCaster, numMsg int, addAt int, numWorker int, dh1 *concurrency.DoneHandler, mp *concurrency.MsgMultiplexer) {
 	go func() {
 		i := 0
 		exit := false
@@ -474,7 +476,7 @@ func broadcastWithAddAtCKey(b *concurrency.BCaster, numMsg int, addAt int,numWor
 						//concurrency.ProcessorTransformFn(concurrency.ProcessorEventTransformFn),
 					)
 					if mp != nil {
-						mp.SetAtCorrelationKey(w.Index(), w.OutputChannel(),e.CorrelationKey)
+						mp.SetAtCorrelationKey(w.Index(), w.OutputChannel(), e.CorrelationKey)
 					}
 					if numWorker%8 == 0 {
 						go w.Process(process8, numWorker)
@@ -505,7 +507,7 @@ func broadcastWithAddAtCKey(b *concurrency.BCaster, numMsg int, addAt int,numWor
 		fmt.Printf("Total Messages Broadcasted: %v,\n", i)
 	}()
 }
-func broadcastWitStartAfterCKeys(b *concurrency.BCaster, numMsg int, startAt int,mp *concurrency.MsgMultiplexer) {
+func broadcastWitStartAfterCKeys(b *concurrency.BCaster, numMsg int, startAt int, mp *concurrency.MsgMultiplexer) {
 	go func() {
 		i := 0
 		exit := false
@@ -533,7 +535,7 @@ func broadcastWitStartAfterCKeys(b *concurrency.BCaster, numMsg int, startAt int
 		fmt.Printf("Total Messages Broadcasted: %v,\n", i)
 	}()
 }
-func broadcastWitStopAfterCKeys(b *concurrency.BCaster, numMsg int,stopAt int, mp *concurrency.MsgMultiplexer) {
+func broadcastWitStopAfterCKeys(b *concurrency.BCaster, numMsg int, stopAt int, mp *concurrency.MsgMultiplexer) {
 	go func() {
 		i := 0
 		exit := false
@@ -551,7 +553,7 @@ func broadcastWitStopAfterCKeys(b *concurrency.BCaster, numMsg int,stopAt int, m
 				if msgId == stopAt {
 					mp.StopAfterCorrelationKey(e.CorrelationKey)
 				}
-			
+
 				b.Broadcast(e)
 				i++
 			}
@@ -563,7 +565,7 @@ func broadcastWitStopAfterCKeys(b *concurrency.BCaster, numMsg int,stopAt int, m
 		fmt.Printf("Total Messages Broadcasted: %v,\n", i)
 	}()
 }
-func broadcastWitStopStartAfterCKeys(b *concurrency.BCaster, numMsg int,stopAt int, startAt int,mp *concurrency.MsgMultiplexer) {
+func broadcastWitStopStartAfterCKeys(b *concurrency.BCaster, numMsg int, stopAt int, startAt int, mp *concurrency.MsgMultiplexer) {
 	go func() {
 		i := 0
 		exit := false
@@ -595,7 +597,7 @@ func broadcastWitStopStartAfterCKeys(b *concurrency.BCaster, numMsg int,stopAt i
 		fmt.Printf("Total Messages Broadcasted: %v,\n", i)
 	}()
 }
-func broadcastWitStopAddDeleteStartAfterCKeys(b *concurrency.BCaster, numMsg int,stopAt int, startAt int,numWorker int,dh1 *concurrency.DoneHandler,mp *concurrency.MsgMultiplexer,w *concurrency.Processor) {
+func broadcastWitStopAddDeleteStartAfterCKeys(b *concurrency.BCaster, numMsg int, stopAt int, startAt int, numWorker int, dh1 *concurrency.DoneHandler, mp *concurrency.MsgMultiplexer, w *concurrency.Processor) {
 	go func() {
 		i := 0
 		exit := false
@@ -613,9 +615,9 @@ func broadcastWitStopAddDeleteStartAfterCKeys(b *concurrency.BCaster, numMsg int
 				if msgId == stopAt {
 					mp.StopAfterCorrelationKey(e.CorrelationKey)
 				}
-				if msgId == (stopAt+1) {
-					mp.DeleteAtCorrelationKey(w.Index(),e.CorrelationKey)
-					
+				if msgId == (stopAt + 1) {
+					mp.DeleteAtCorrelationKey(w.Index(), e.CorrelationKey)
+
 				}
 				if msgId == startAt {
 					w1 := concurrency.NewProcessor(
@@ -658,7 +660,7 @@ func broadcastWitStopAddDeleteStartAfterCKeys(b *concurrency.BCaster, numMsg int
 		fmt.Printf("Total Messages Broadcasted: %v,\n", i)
 	}()
 }
-func broadcastWitStopDeleteStartAfterCKeys(b *concurrency.BCaster, numMsg int,stopAt int, startAt int,mp *concurrency.MsgMultiplexer,w *concurrency.Processor) {
+func broadcastWitStopDeleteStartAfterCKeys(b *concurrency.BCaster, numMsg int, stopAt int, startAt int, mp *concurrency.MsgMultiplexer, w *concurrency.Processor) {
 	go func() {
 		i := 0
 		exit := false
@@ -676,8 +678,8 @@ func broadcastWitStopDeleteStartAfterCKeys(b *concurrency.BCaster, numMsg int,st
 				if msgId == stopAt {
 					mp.StopAfterCorrelationKey(e.CorrelationKey)
 				}
-				if msgId == (stopAt+1) {
-					mp.DeleteAtCorrelationKey(w.Index(),e.CorrelationKey)
+				if msgId == (stopAt + 1) {
+					mp.DeleteAtCorrelationKey(w.Index(), e.CorrelationKey)
 				}
 				if msgId == startAt {
 					mp.StartAfterCorrelationKey(e.CorrelationKey)
@@ -693,7 +695,7 @@ func broadcastWitStopDeleteStartAfterCKeys(b *concurrency.BCaster, numMsg int,st
 		fmt.Printf("Total Messages Broadcasted: %v,\n", i)
 	}()
 }
-func broadcastWitStopAddStartAfterCKeys(b *concurrency.BCaster, numMsg int,stopAt int, startAt int,numWorker int,dh1 *concurrency.DoneHandler,mp *concurrency.MsgMultiplexer) {
+func broadcastWitStopAddStartAfterCKeys(b *concurrency.BCaster, numMsg int, stopAt int, startAt int, numWorker int, dh1 *concurrency.DoneHandler, mp *concurrency.MsgMultiplexer) {
 	go func() {
 		i := 0
 		exit := false
@@ -869,6 +871,7 @@ func filterTransformFn(f *concurrency.Filter, input interface{}) interface{} {
 func multiMsgGetItemKey(v interface{}) int64 {
 	return v.(*concurrency.Message).CorrelationKey
 }
+
 // defaultMultiMsgTransformFn - Transforms the SortedMap output into a Message for future consumption as part of the
 // output channel of the MultiMsgMultiplexer. Can be overridden for a more generic implementation
 // Oriented
