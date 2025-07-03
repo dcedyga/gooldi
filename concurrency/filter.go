@@ -82,7 +82,7 @@ func FilterTransformFn(fn func(fr *Filter, input interface{}) interface{}) Filte
 	}
 }
 
-// ID - retrieves the Id of the Filter
+// ID - retrieves the ID of the Filter
 func (f *Filter) ID() string {
 	return f.id
 }

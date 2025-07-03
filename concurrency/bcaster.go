@@ -56,7 +56,7 @@ func NewBCaster(dh *DoneHandler, msgType string, opts ...BCasterOption) *BCaster
 	return b
 }
 
-// ID - retrieves the Id of the Bcaster
+// ID - retrieves the ID of the Bcaster
 func (b *BCaster) ID() string {
 	return b.id
 }

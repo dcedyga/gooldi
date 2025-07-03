@@ -81,7 +81,7 @@ func ProcessorWithInputChannel(in chan interface{}) ProcessorOption {
 	}
 }
 
-// ID - retrieves the Id of the Processor
+// ID - retrieves the ID of the Processor
 func (p *Processor) ID() string {
 	return p.id
 }

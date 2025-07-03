@@ -57,12 +57,12 @@ func (dh *DoneHandler) setDonefn() {
 	}
 }
 
-// ID - retrieves the Id of the DoneHandler
+// ID - retrieves the ID of the DoneHandler
 func (dh *DoneHandler) ID() string {
 	return dh.id
 }
 
-// DoneHandlerWithDeadline - option to add a dealine value to the DoneHandler
+// DoneHandlerWithDeadline - option to add a deadline value to the DoneHandler
 func DoneHandlerWithDeadline(deadline time.Time) DoneHandlerOption {
 	return func(dh *DoneHandler) {
 		dh.deadline = &deadline
@@ -83,7 +83,7 @@ func (dh *DoneHandler) Done() chan interface{} {
 	return dh.done
 }
 
-// GetDoneFunc - retrieves the GetDone Function of the DoneHandler
+// GetDoneFunc - retrieves the done function of the DoneHandler
 func (dh *DoneHandler) GetDoneFunc() func() {
 	return dh.donefn
 }

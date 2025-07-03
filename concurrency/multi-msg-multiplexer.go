@@ -139,7 +139,7 @@ func MultiMsgMultiplexerItemKeyFn(fn func(v interface{}) int64) MultiMsgMultiple
 	}
 }
 
-// ID - retrieves the Id of the MultiMsgMultiplexer
+// ID - retrieves the ID of the MultiMsgMultiplexer
 func (mp *MultiMsgMultiplexer) ID() string {
 	return mp.id
 }

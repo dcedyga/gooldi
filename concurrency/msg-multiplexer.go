@@ -134,7 +134,7 @@ func MsgMultiplexerTransformFn(fn func(mp *MsgMultiplexer, sm *SortedMap, correl
 	}
 }
 
-// ID - retrieves the Id of the MsgMultiplexer
+// ID - retrieves the ID of the MsgMultiplexer
 func (mp *MsgMultiplexer) ID() string {
 	return mp.id
 }
