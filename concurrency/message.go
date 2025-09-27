@@ -15,12 +15,12 @@ type MessagePairOption func(*MessagePair)
 /*
 Message - Struct that represents an message in the context of the concurrency package.
 Contains:
- - ID: the ID of the message
- - Message: the Message,
- - TimeInNano: the time that was produced
- - MsgType: the type of the message,
- - CorrelationKey: a correlation key to correlate to other messages
- - Index: the index related to the order that can be used to produce deterministic outputs
+  - ID: the ID of the message
+  - Message: the Message,
+  - TimeInNano: the time that was produced
+  - MsgType: the type of the message,
+  - CorrelationKey: a correlation key to correlate to other messages
+  - Index: the index related to the order that can be used to produce deterministic outputs
 */
 type Message struct {
 	ID             string
@@ -55,7 +55,7 @@ type MessagePair struct {
 	CorrelationKey int64
 }
 
-//Message and MessagePair constructors
+// Message and MessagePair constructors
 // NewMessage - Constructor
 func NewMessage(msg interface{}, mType string, opts ...MessageOption) *Message {
 	m := &Message{
@@ -72,14 +72,14 @@ func NewMessage(msg interface{}, mType string, opts ...MessageOption) *Message {
 	return m
 }
 
-//MessageWithIndex - initialize index
+// MessageWithIndex - initialize index
 func MessageWithIndex(idx int64) MessageOption {
 	return func(m *Message) {
 		m.Index = idx
 	}
 }
 
-//MessageWithCorrelationKey - initialize correlationKey
+// MessageWithCorrelationKey - initialize correlationKey
 func MessageWithCorrelationKey(cKey int64) MessageOption {
 	return func(m *Message) {
 		m.CorrelationKey = cKey
@@ -100,14 +100,14 @@ func NewMessagePair(in *Message, out *Message, opts ...MessagePairOption) *Messa
 	return m
 }
 
-//MessagePairWithIndex - initialize index
+// MessagePairWithIndex - initialize index
 func MessagePairWithIndex(idx int64) MessagePairOption {
 	return func(m *MessagePair) {
 		m.Index = idx
 	}
 }
 
-//MessagePairWithCorrelationKey - initialize correlationKey
+// MessagePairWithCorrelationKey - initialize correlationKey
 func MessagePairWithCorrelationKey(cKey int64) MessagePairOption {
 	return func(m *MessagePair) {
 		m.CorrelationKey = cKey

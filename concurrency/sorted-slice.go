@@ -89,7 +89,7 @@ func (cs *SortedSlice) sort() {
 	}
 }
 
-//RemoveItemAtIndex removes the item at the specified index
+// RemoveItemAtIndex removes the item at the specified index
 func (cs *SortedSlice) RemoveItemAtIndex(index int) {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
@@ -97,7 +97,7 @@ func (cs *SortedSlice) RemoveItemAtIndex(index int) {
 	cs.dirty = true
 }
 
-//IndexOf returns the index of a specific item
+// IndexOf returns the index of a specific item
 func (cs *SortedSlice) IndexOf(item interface{}) int {
 	cs.sort()
 	cs.lock.Lock()
@@ -110,7 +110,7 @@ func (cs *SortedSlice) IndexOf(item interface{}) int {
 	return -1 //not found.
 }
 
-//GetItemAtIndex - Get item at index
+// GetItemAtIndex - Get item at index
 func (cs *SortedSlice) GetItemAtIndex(index int) interface{} {
 	cs.sort()
 	cs.lock.Lock()
@@ -164,14 +164,14 @@ func (cs *SortedSlice) IterWithCancel(cancel chan interface{}) <-chan SortedSlic
 	return c
 }
 
-//Len - length of the slice
+// Len - length of the slice
 func (cs *SortedSlice) Len() int {
 	cs.lock.RLock()
 	defer cs.lock.RUnlock()
 	return len(cs.items)
 }
 
-//Cap - capacity of the slice
+// Cap - capacity of the slice
 func (cs *SortedSlice) Cap() int {
 	cs.lock.RLock()
 	defer cs.lock.RUnlock()

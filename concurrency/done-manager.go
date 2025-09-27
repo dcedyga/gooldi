@@ -79,12 +79,12 @@ func (dm *DoneManager) setDonefn() {
 	}
 }
 
-// ID - retrieves the Id of the DoneManager
+// ID - retrieves the ID of the DoneManager
 func (dm *DoneManager) ID() string {
 	return dm.id
 }
 
-// DoneManagerWithDeadline - option to add a dealine value to the DoneManager
+// DoneManagerWithDeadline - option to add a deadline value to the DoneManager
 func DoneManagerWithDeadline(deadline time.Time) DoneManagerOption {
 	return func(dm *DoneManager) {
 		dm.deadline = &deadline
@@ -258,7 +258,7 @@ func QueryDoneHandlerWithLayer(layer int) QueryDoneHandlerOption {
 	}
 }
 
-// GetDoneFunc - retrieves the GetDone Function of the DoneManager
+// GetDoneFunc - retrieves the done function of the DoneManager
 func (dm *DoneManager) GetDoneFunc() func() {
 	return dm.donefn
 }

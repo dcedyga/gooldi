@@ -54,7 +54,7 @@ type MultiMsgMultiplexer struct {
 // 	value interface{}
 // }
 
-//NewMultiMsgMultiplexer - Constructor
+// NewMultiMsgMultiplexer - Constructor
 func NewMultiMsgMultiplexer(dh *DoneHandler, msgType string, opts ...MultiMsgMultiplexerOption) *MultiMsgMultiplexer {
 	id := uuid.NewV4().String()
 	mp := &MultiMsgMultiplexer{
@@ -139,7 +139,7 @@ func MultiMsgMultiplexerItemKeyFn(fn func(v interface{}) int64) MultiMsgMultiple
 	}
 }
 
-// ID - retrieves the Id of the MultiMsgMultiplexer
+// ID - retrieves the ID of the MultiMsgMultiplexer
 func (mp *MultiMsgMultiplexer) ID() string {
 	return mp.id
 }
@@ -205,7 +205,7 @@ func (mp *MultiMsgMultiplexer) processChannel(key interface{}, value chan interf
 	mp.clean(key)
 }
 
-//storeInOutputMap - Adds an item to the SortedMap that is going to be send as part of the output, the SortedMap
+// storeInOutputMap - Adds an item to the SortedMap that is going to be send as part of the output, the SortedMap
 // length is defined by the BufferSize property, allowing to retrieve the last n messages for a specific Messagetype.
 func (mp *MultiMsgMultiplexer) storeInOutputMap(cKey int64, v interface{}, m *SortedMap) {
 	mp.lock.Lock()

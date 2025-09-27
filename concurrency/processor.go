@@ -81,7 +81,7 @@ func ProcessorWithInputChannel(in chan interface{}) ProcessorOption {
 	}
 }
 
-// ID - retrieves the Id of the Processor
+// ID - retrieves the ID of the Processor
 func (p *Processor) ID() string {
 	return p.id
 }
@@ -192,7 +192,7 @@ func (p *Processor) HasValidInputChan() bool {
 	return p.inputChan != nil
 }
 
-//close - Closes the processor
+// close - Closes the processor
 func (p *Processor) close() {
 	//fmt.Printf("Processor %v: Closing\n", p.Name)
 	p.lock.Lock()

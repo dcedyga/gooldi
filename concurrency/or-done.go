@@ -1,6 +1,5 @@
 package concurrency
 
-
 // OrDone - Wraps a channel with a select statement that also selects from a done channel. Allows to cancel the channel
 // avoiding go-routine leaks
 func OrDone(done, c <-chan interface{}) chan interface{} {

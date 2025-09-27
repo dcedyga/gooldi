@@ -118,7 +118,7 @@ func (cm *Map) IterWithCancel(cancel chan interface{}) <-chan MapItem {
 	return c
 }
 
-//Len - length of the map
+// Len - length of the map
 func (cm *Map) Len() int {
 	cm.lock.RLock()
 	defer cm.lock.RUnlock()

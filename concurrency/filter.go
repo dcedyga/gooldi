@@ -82,7 +82,7 @@ func FilterTransformFn(fn func(fr *Filter, input interface{}) interface{}) Filte
 	}
 }
 
-// ID - retrieves the Id of the Filter
+// ID - retrieves the ID of the Filter
 func (f *Filter) ID() string {
 	return f.id
 }
@@ -184,7 +184,7 @@ func (f *Filter) HasValidInputChan() bool {
 	return f.inputChan != nil
 }
 
-//close - Closes the filter
+// close - Closes the filter
 func (f *Filter) close() {
 	fmt.Printf("Filter %v: Closing\n", f.Name)
 	f.lock.Lock()

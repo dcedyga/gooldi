@@ -33,14 +33,14 @@ func (cs *Slice) Append(item interface{}) {
 	cs.items = append(cs.items, item)
 }
 
-//RemoveItemAtIndex removes the item at the specified index
+// RemoveItemAtIndex removes the item at the specified index
 func (cs *Slice) RemoveItemAtIndex(index int) {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
 	cs.items = append(cs.items[:index], cs.items[index+1:]...)
 }
 
-//IndexOf returns the index of a specific item
+// IndexOf returns the index of a specific item
 func (cs *Slice) IndexOf(item interface{}) int {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
@@ -52,7 +52,7 @@ func (cs *Slice) IndexOf(item interface{}) int {
 	return -1 //not found.
 }
 
-//GetItemAtIndex - Get item at index
+// GetItemAtIndex - Get item at index
 func (cs *Slice) GetItemAtIndex(index int) interface{} {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
@@ -103,14 +103,14 @@ func (cs *Slice) IterWithCancel(cancel chan interface{}) <-chan SliceItem {
 	return c
 }
 
-//Len - length of the slice
+// Len - length of the slice
 func (cs *Slice) Len() int {
 	cs.lock.RLock()
 	defer cs.lock.RUnlock()
 	return len(cs.items)
 }
 
-//Cap - capacity of the slice
+// Cap - capacity of the slice
 func (cs *Slice) Cap() int {
 	cs.lock.RLock()
 	defer cs.lock.RUnlock()
